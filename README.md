@@ -2,4 +2,4 @@
 
 UC Berkeley CS280A 26F
 
-URL is <a href="https://wenhaoruan12.github.io/CS280A-26F/"> here </a>
+URL is <a href="https://wenhaoruan12.github.io/CS280A-26F/">  wenhaoruan12.github.io/CS280A-26F/ </a>

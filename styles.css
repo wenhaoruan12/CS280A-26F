@@ -1,0 +1,96 @@
+/* CS280A Portfolio Stylesheet */
+
+:root{
+    --primary-color: #6fa4ed;
+    --secondary-color: #f0f0f0;
+    --link-color: #1a0dab;
+    --text: #000000;
+    --background: #fcfaf2;
+    --berkeley-blue: #003262;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--text);
+    background-color: var(--background);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px;
+}
+
+/* Header Styles */
+h1 {
+    font-size: 24px;
+    color: black;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 20px;
+    color: var(--berkeley-blue);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* SuperLink Styles */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.caption {
+    font-size: 14px;
+    color: var(--text);
+    text-align: center;
+    margin-top: 5px;
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 24px 0;
+}
+
+.row figure {
+    flex: 1;
+    min-width: 200px;
+    margin: 0;
+}
+
+/* Project List Styles */
+
+.project-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.project-list li {
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    background-color: var(--secondary-color);
+}
+
+.project-list li a {
+    color: var(--link-color);
+    font-weight: bold;
+    text-decoration: none;
+}
