@@ -54,20 +54,20 @@
         </p>
         <div class="row square">
             <figure>
-                <a href="images/b.png" target="_blank" rel="noopener">
-                    <img src="images/b.png" alt="Blue Channel" loading="lazy">
+                <a href="images/cathedral_b.png" target="_blank" rel="noopener">
+                    <img src="images/cathedral_b.png" alt="Blue Channel" loading="lazy">
                 </a>
                 <p class="caption"><strong>Figure 1a:</strong> Blue Channel</p>
             </figure>
             <figure>
-                <a href="images/g.png" target="_blank" rel="noopener">
-                    <img src="images/g.png" alt="Green Channel" loading="lazy">
+                <a href="images/cathedral_g.png" target="_blank" rel="noopener">
+                    <img src="images/cathedral_g.png" alt="Green Channel" loading="lazy">
                 </a>
                 <p class="caption"><strong>Figure 1b:</strong> Green Channel</p>
             </figure>
             <figure>
-                <a href="images/r.png" target="_blank" rel="noopener">
-                    <img src="images/r.png" alt="Red Channel" loading="lazy">
+                <a href="images/cathedral_r.png" target="_blank" rel="noopener">
+                    <img src="images/cathedral_r.png" alt="Red Channel" loading="lazy">
                 </a>
                 <p class="caption"><strong>Figure 1c:</strong> Red Channel</p>
             </figure>
@@ -89,14 +89,14 @@
             Based on this, we have to find some ways to align the three channels and eliminate the misalignment. The easist way is to exhaustively search over a window of possible
             displacements, score each one using some image matching scores such as L2 Norm or Normalized Cross Correlation (NCC). The equations of both scores are listed below:
         </p>
-        <h3>L2 Norm</h3>
+        <h4>L2 Norm</h4>
         <p>
             \[
             L2(I_1, I_2) = \sqrt{\sum_{x,y} \left(I_1(x,y) - I_2(x,y)\right)^2}
             \]
         </p>
 
-        <h3>Normalized Cross-Correlation (NCC)</h3>
+        <h4>Normalized Cross-Correlation (NCC)</h4>
 
         <p>
             \[
@@ -112,8 +112,8 @@
         </p>
         <div class="row single">
             <figure>
-                <a href="images/cathedral_col_win.png" target="_blank" rel="noopener">
-                    <img src="images/cathedral_col_win.png" alt="cathedral_col_win" loading="lazy">
+                <a href="images/cathedral.jpg" target="_blank" rel="noopener">
+                    <img src="images/cathedral.jpg" alt="cathedral_col_win" loading="lazy">
                 </a>
                 <p class="caption"><strong>Figure 3:</strong> Cathedral Aligned Image</p>
             </figure>
@@ -121,6 +121,122 @@
 
 
         <h2>Gaussian Photo Pyramid Acceleration</h2>
+        <p>
+            The above alignment algorithm is very slow since it needs to exhaustively search over a window of possible displacements. 
+            To accelerate the process, we can use Gaussian Photo Pyramid to reduce the image size and perform the alignment on the smaller image. 
+        </p>
+        <h3>Gallary </h3>
+        <div class="row">
+            <figure>
+                <a href="images/cathedral.jpg" target="_blank" rel="noopener">
+                    <img src="images/cathedral.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4a:</strong> Cathedral<br>
+                    G offset: (2, 5) &nbsp;|&nbsp; R offset: (3, 12) &nbsp;|&nbsp; Time: 0.08s</p>
+            </figure>
+            <figure>
+                <a href="images/monastery.jpg" target="_blank" rel="noopener">
+                    <img src="images/monastery.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4b:</strong> Monastery<br>
+                    G offset: (2, -3) &nbsp;|&nbsp; R offset: (2, 3) &nbsp;|&nbsp; Time: 0.08s</p>
+            </figure>
+            <figure>
+                <a href="images/tobolsk.jpg" target="_blank" rel="noopener">
+                    <img src="images/tobolsk.jpg" alt="Tobolsk" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4c:</strong> Tobolsk<br>
+                    G offset: (3, 3) &nbsp;|&nbsp; R offset: (3, 6) &nbsp;|&nbsp; Time: 0.08s</p>
+            </figure>
+        </div>
+        <div class="row">
+            <figure>
+                <a href="images/church.jpg" target="_blank" rel="noopener">
+                    <img src="images/church.jpg" alt="Church" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4d:</strong> Church<br>
+                    G offset: (4, 25) &nbsp;|&nbsp; R offset: (-4, 58) &nbsp;|&nbsp; Time: 4.11s</p>
+            </figure>
+            <figure>
+                <a href="images/emir.jpg" target="_blank" rel="noopener">
+                    <img src="images/emir.jpg" alt="Emir" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4e:</strong> Emir<br>
+                    G offset: (24, 49) &nbsp;|&nbsp; R offset: (-205, 141) &nbsp;|&nbsp; Time: 4.58s</p>
+            </figure>
+            <figure>
+                <a href="images/harvesters.jpg" target="_blank" rel="noopener">
+                    <img src="images/harvesters.jpg" alt="Harvesters" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4f:</strong> Harvesters<br>
+                    G offset: (17, 60) &nbsp;|&nbsp; R offset: (13, 124) &nbsp;|&nbsp; Time: 4.04s</p>
+            </figure>
+        </div>
+        <div class="row">
+            <figure>
+                <a href="images/icon.jpg" target="_blank" rel="noopener">
+                    <img src="images/icon.jpg" alt="Icon" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4g:</strong> Icon<br>
+                    G offset: (17, 41) &nbsp;|&nbsp; R offset: (23, 89) &nbsp;|&nbsp; Time: 4.18s</p>
+            </figure>
+            <figure>
+                <a href="images/ilemselga.jpg" target="_blank" rel="noopener">
+                    <img src="images/ilemselga.jpg" alt="Ilemselga" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4h:</strong> Ilemselga<br>
+                    G offset: (7, 40) &nbsp;|&nbsp; R offset: (11, 130) &nbsp;|&nbsp; Time: 4.33s</p>
+            </figure>
+            <figure>
+                <a href="images/melons.jpg" target="_blank" rel="noopener">
+                    <img src="images/melons.jpg" alt="Melons" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4i:</strong> Melons<br>
+                    G offset: (11, 82) &nbsp;|&nbsp; R offset: (13, 178) &nbsp;|&nbsp; Time: 4.22s</p>
+            </figure>
+        </div>
+        <div class="row">
+            <figure>
+                <a href="images/religious_painting.jpg" target="_blank" rel="noopener">
+                    <img src="images/religious_painting.jpg" alt="Religious Painting" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4j:</strong> Religious Painting<br>
+                    G offset: (3, 28) &nbsp;|&nbsp; R offset: (7, 68) &nbsp;|&nbsp; Time: 4.14s</p>
+            </figure>
+            <figure>
+                <a href="images/self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="images/self_portrait.jpg" alt="Self Portrait" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4k:</strong> Self Portrait<br>
+                    G offset: (29, 79) &nbsp;|&nbsp; R offset: (37, 176) &nbsp;|&nbsp; Time: 4.25s</p>
+            </figure>
+            <figure>
+                <a href="images/siren.jpg" target="_blank" rel="noopener">
+                    <img src="images/siren.jpg" alt="Siren" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4l:</strong> Siren<br>
+                    G offset: (-6, 49) &nbsp;|&nbsp; R offset: (-25, 96) &nbsp;|&nbsp; Time: 4.34s</p>
+            </figure>
+        </div>
+        <div class="row">
+            <figure>
+                <a href="images/three_generations.jpg" target="_blank" rel="noopener">
+                    <img src="images/three_generations.jpg" alt="Three Generations" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4m:</strong> Three Generations<br>
+                    G offset: (14, 53) &nbsp;|&nbsp; R offset: (11, 112) &nbsp;|&nbsp; Time: 4.24s</p>
+            </figure>
+            <figure>
+                <a href="images/wharf.jpg" target="_blank" rel="noopener">
+                    <img src="images/wharf.jpg" alt="Wharf" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 4n:</strong> Wharf<br>
+                    G offset: (-7, 15) &nbsp;|&nbsp; R offset: (-16, 83) &nbsp;|&nbsp; Time: 4.28s</p>
+            </figure>
+            <figure style="visibility: hidden;"></figure>
+        </div>
+
+
 
     </main>
 
