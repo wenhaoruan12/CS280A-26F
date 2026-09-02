@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 1 CS280A</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="../index.html">CS<span>280A</span></a>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <div class="dropdown">
+                    <button type="button" class="dropdown-toggle is-current" aria-haspopup="true" aria-expanded="false">
+                        Projects <span class="chev" aria-hidden="true"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="../project0/index.html"><span class="num">Project 0</span><span class="name">Become Friends with Your Camera</span></a></li>
+                        <li><a href="../project1/index.html" aria-current="page"><span class="num">Project 1</span><span class="name">Colorizing the Prokudin-Gorskii Collection</span></a></li>
+                        <li><a href="../project2/index.html"><span class="num">Project 2</span><span class="name">Fun with Filters and Frequencies</span></a></li>
+                        <li><a href="../project3/index.html"><span class="num">Project 3</span><span class="name">Fun with Diffusion Models</span></a></li>
+                        <li><a href="../project4/index.html"><span class="num">Project 4</span><span class="name">Autostitching and Photo Mosaics</span></a></li>
+                        <li><a href="../project5/index.html"><span class="num"></span>>Final Project</span><span class="name">Coming Soon</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <p class="eyebrow">Project 1</p>
+            <h1>Image of the Russian Empire -- Colorizing the Prokudin-Gorskii Photo Collection</h1>
+            <p class="subtitle"><strong>Wenhao Ruan</strong> · Fall 2026</p>
+        </section>
+        <p style="text-align:center; color: var(--muted);">This project has not been published yet.</p>
+    </main>
+
+    <footer class="site-footer">
+        <a href="../index.html">← Back to all projects</a>
+    </footer>
+
+    <script>
+    (function () {
+        var dd = document.querySelector('.dropdown');
+        if (!dd) return;
+        var btn = dd.querySelector('.dropdown-toggle');
+        function setOpen(open) {
+            dd.classList.toggle('open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            setOpen(!dd.classList.contains('open'));
+        });
+        document.addEventListener('click', function (e) {
+            if (!dd.contains(e.target)) setOpen(false);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setOpen(false);
+        });
+    })();
+    </script>
+</body>
+</html>

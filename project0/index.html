@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 0 · CS280A</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a class="brand" href="../index.html">CS<span>280A</span></a>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <div class="dropdown">
+                    <button type="button" class="dropdown-toggle is-current" aria-haspopup="true" aria-expanded="false">
+                        Projects <span class="chev" aria-hidden="true"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="../project0/index.html" aria-current="page"><span class="num">Project 0</span><span class="name">Become Friends with Your Camera</span></a></li>
+                        <li><a href="../project1/index.html"><span class="num">Project 1</span><span class="name">Colorizing the Prokudin-Gorskii Collection</span></a></li>
+                        <li><a href="../project2/index.html"><span class="num">Project 2</span><span class="name">Fun with Filters and Frequencies</span></a></li>
+                        <li><a href="../project3/index.html"><span class="num">Project 3</span><span class="name">Fun with Diffusion Models</span></a></li>
+                        <li><a href="../project4/index.html"><span class="num">Project 4</span><span class="name">Autostitching and Photo Mosaics</span></a></li>
+                        <li><a href="../project5/index.html"><span class="num"></span>>Final Project</span><span class="name">Coming Soon</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <p class="eyebrow">Project 0</p>
+            <h1>Become Friends with Your Camera</h1>
+            <p class="subtitle"><strong>Wenhao Ruan</strong> · Fall 2026</p>
+        </section>
+
+        <h2>Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
+
+        <div class="row portraits">
+            <figure>
+                <a href="images/s13.jpg" target="_blank" rel="noopener">
+                    <img src="images/s13.jpg" alt="Selfie shot at 16mm from close range" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1a:</strong> 16mm, Close Distance</p>
+            </figure>
+            <figure>
+                <a href="images/s24.jpg" target="_blank" rel="noopener">
+                    <img src="images/s24.jpg" alt="Selfie shot at 24mm" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1b:</strong> 24mm, Middle Distance</p>
+            </figure>
+            <figure>
+                <a href="images/s48.jpg" target="_blank" rel="noopener">
+                    <img src="images/s48.jpg" alt="Selfie shot at 48mm" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1c:</strong> 48mm, Middle Distance</p>
+            </figure>
+            <figure>
+                <a href="images/s100.jpg" target="_blank" rel="noopener">
+                    <img src="images/s100.jpg" alt="Selfie shot at 100mm from far away" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1d:</strong> 100mm, Far Distance</p>
+            </figure>
+        </div>
+
+        <p>
+            Compared to the 16 mm image, the portraits taken at 24 mm and 48 mm appear
+            to be more natural and better. At 16 mm, the camera has to be placed very
+            close to the face to fill the frame, which results in a distorted
+            appearance of the face. As the focal length increases, the camera can be placed
+            farther away while maintaining the same framing, which reduces distortion
+            and creates a more natural portrait. However, when the focal length
+            increases to 100 mm, the portrait can begin to look unnatural again.
+            To maintain a similar framing, the camera must be positioned much farther
+            from the face. This greater distance produces stronger perspective
+            compression, making the face appear flatter.
+        </p>
+
+        <h2>Part 2: Architectural Perspective Compression</h2>
+
+        <div class="row landscape">
+            <figure>
+                <a href="images/Building_Close.jpg" target="_blank" rel="noopener">
+                    <img src="images/Building_Close.jpg" alt="Close-up shot of a building" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2a:</strong> Close-up shot at 24 mm</p>
+            </figure>
+            <figure>
+                <a href="images/Building_Far.jpg" target="_blank" rel="noopener">
+                    <img src="images/Building_Far.jpg" alt="Far shot of a building" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2b:</strong> Distant shot at 100 mm</p>
+            </figure>
+        </div>
+
+        <p>
+            In these two images, we can see that the pillars appear to have
+            similar heights, but those in the left image look longer and more
+            stretched, while those in the right image appear more compact.
+            The left image was taken from a closer distance using a 24 mm focal
+            length, whereas the right image was taken from farther away using a
+            100 mm focal length. Since the right one used a longer focal length,
+            this resulted in perspective compression, making the pillars appear
+            more compact and compressed.
+        </p>
+
+        <h2>Part 3: The Dolly Zoom</h2>
+
+        <figure class="single">
+            <a href="images/dolly_zoom.gif" target="_blank" rel="noopener">
+                <img src="images/dolly_zoom.gif" alt="Dolly zoom sequence from 14mm to 75mm" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 3:</strong> Dolly zoom, focal lengths of 14 / 19 / 28 / 35 / 48 / 75 mm</p>
+        </figure>
+
+        <p>
+            During shooting, as the focal length increased,
+            the camera was moved backward accordingly to maintain
+            a consistent image size of the coffee cup within the frame.
+            As you can see, the size of the cup remains almost unchanged,
+            while the monitor and desktop in the background are continuously
+            zoomed in and magnified. This is a classic example of the dolly
+            zoom effect. As the focal length increases, the field of view
+            becomes narrower and the perspective appears more compressed, making
+            the background objects appear closer to the subject.
+        </p>
+    </main>
+
+    <footer class="site-footer">
+        <a href="../index.html">← Back to all projects</a>
+    </footer>
+
+    <script>
+    (function () {
+        var dd = document.querySelector('.dropdown');
+        if (!dd) return;
+        var btn = dd.querySelector('.dropdown-toggle');
+        function setOpen(open) {
+            dd.classList.toggle('open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            setOpen(!dd.classList.contains('open'));
+        });
+        document.addEventListener('click', function (e) {
+            if (!dd.contains(e.target)) setOpen(false);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') setOpen(false);
+        });
+    })();
+    </script>
+</body>
+</html>
