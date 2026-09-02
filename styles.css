@@ -330,6 +330,11 @@ figure a {
     object-fit: cover;
 }
 
+.row.square img {
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
 .row.landscape img {
     aspect-ratio: 4 / 3;
     object-fit: cover;

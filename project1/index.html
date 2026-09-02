@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 1 CS280A</title>
     <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <header class="site-header">
@@ -36,10 +37,90 @@
             <p class="subtitle"><strong>Wenhao Ruan</strong> · Fall 2026</p>
         </section>
 
-        <h2>Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
+        <h2>Introduction</h2>
+        <p>
+            Sergei Mikhailovich Prokudin-Gorskii (1863-1944) was a man well ahead of his time. Convinced, as early as 1907, that color photography was the wave of the future, 
+            he won Tzar's special permission to travel across the vast Russian Empire and take color photographs of everything he saw including the only color portrait of Leo Tolstoy. 
+            And he really photographed everything: people, buildings, landscapes, railroads, bridges... thousands of color pictures! His idea was simple: record three exposures of 
+            every scene onto a glass plate using a red, a green, and a blue filter. Never mind that there was no way to print color photographs until much later -- he envisioned 
+            special projectors to be installed in "multimedia" classrooms all across Russia where the children would be able to learn about their vast country. Alas, his plans 
+            never materialized: he left Russia in 1918, right after the revolution, never to return again. Luckily, his RGB glass plate negatives, capturing the last years of the 
+            Russian Empire, survived and were purchased in 1948 by the Library of Congress. The LoC has recently digitized the negatives and made them available on-line.
+        </p>
+        <h2>Images Alignment</h2>
+        <p>
+            Toke the Cathedral as an example, the original image consist of three separate images taken with different color filters. 
+            These three images are shown below (refer to Figure 1a, 1b, and 1c).
+        </p>
+        <div class="row square">
+            <figure>
+                <a href="images/b.png" target="_blank" rel="noopener">
+                    <img src="images/b.png" alt="Blue Channel" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1a:</strong> Blue Channel</p>
+            </figure>
+            <figure>
+                <a href="images/g.png" target="_blank" rel="noopener">
+                    <img src="images/g.png" alt="Green Channel" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1b:</strong> Green Channel</p>
+            </figure>
+            <figure>
+                <a href="images/r.png" target="_blank" rel="noopener">
+                    <img src="images/r.png" alt="Red Channel" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1c:</strong> Red Channel</p>
+            </figure>
+        </div>
+        <p>
+            The easiest way to reconstruct the color image is to use the blue channel of the image as the reference and align the red and green channels to it. 
+            However, if we simply stack them together,the three channels are not perfectly aligned.
+            This produces visible color disaligement in the final image, as shown in Figure 2.
+        </p>
+        <div class="row single">
+            <figure>
+                <a href="images/original_cathedral.jpg" target="_blank" rel="noopener">
+                    <img src="images/original_cathedral.jpg" alt="Blue Channel" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2:</strong> Cathedral Simple Alignment</p>
+            </figure>
+        </div>
+        <p>
+            Based on this, we have to find some ways to align the three channels and eliminate the misalignment. The easist way is to exhaustively search over a window of possible
+            displacements, score each one using some image matching scores such as L2 Norm or Normalized Cross Correlation (NCC). The equations of both scores are listed below:
+        </p>
+        <h3>L2 Norm</h3>
+        <p>
+            \[
+            L2(I_1, I_2) = \sqrt{\sum_{x,y} \left(I_1(x,y) - I_2(x,y)\right)^2}
+            \]
+        </p>
+
+        <h3>Normalized Cross-Correlation (NCC)</h3>
+
+        <p>
+            \[
+            \mathrm{NCC}(I_1,I_2)=\frac
+            {
+                \sum_{x,y}\left(I_1(x,y)-\bar{I}_1\right)\left(I_2(x,y)-\bar{I}_2\right)}
+            {
+                \sqrt{\sum_{x,y}\left(I_1(x,y)-\bar{I}_1\right)^2}\sqrt{\sum_{x,y}\left(I_2(x,y)-\bar{I}_2\right)^2}}
+            \]
+        </p>
+        <p>
+            After applying the alignment algorithm, we can get the final aligned image using NCC as shown in Figure 3.
+        </p>
+        <div class="row single">
+            <figure>
+                <a href="images/cathedral_col_win.png" target="_blank" rel="noopener">
+                    <img src="images/cathedral_col_win.png" alt="cathedral_col_win" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 3:</strong> Cathedral Aligned Image</p>
+            </figure>
+        </div>
 
 
-
+        <h2>Gaussian Photo Pyramid Acceleration</h2>
 
     </main>
 
