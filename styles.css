@@ -2,23 +2,24 @@
    CS280A Portfolio CSS — Wenhao Ruan
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap');
 
 :root {
-    --heading: #2a2f38; 
-    --accent: #5b6e8c;  
-    --accent-soft: #c9d1dc; 
+    --heading: #16191d;      /* near-black */
+    --accent: #0f766e;       /* deep teal */
+    --accent-soft: #d5ece9;  /* pale teal */
 
-    --bg: #fafaf8;   
+    --bg: #f3f4f6;           /* cool light gray */
     --surface: #ffffff;
-    --text: #2f343c;
-    --muted: #6b7280;
-    --border: #e6e6e2;
+    --text: #2b3036;
+    --muted: #6b7380;
+    --border: #e1e4e8;
 
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-display: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    --radius: 12px;
+    --radius: 6px;
     --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
     --shadow-md: 0 8px 24px rgba(16, 24, 40, 0.10);
     --content-width: 980px;
@@ -43,9 +44,7 @@ body {
    -------------------------------------------------------------------------- */
 
 .site-header {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: saturate(180%) blur(8px);
-    -webkit-backdrop-filter: saturate(180%) blur(8px);
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -63,15 +62,16 @@ body {
 }
 
 .site-header .brand {
+    font-family: var(--font-mono);
     color: var(--heading);
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font-weight: 500;
+    letter-spacing: 0.04em;
     text-decoration: none;
-    font-size: 17px;
+    font-size: 15px;
 }
 
 .site-header .brand span {
-    color: var(--accent);
+    color: #4b5563;
 }
 
 .site-header .nav-links {
@@ -182,10 +182,10 @@ body {
 }
 
 .dropdown-menu .num {
+    font-family: var(--font-mono);
     font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     color: var(--accent);
 }
 
@@ -205,30 +205,33 @@ main {
 }
 
 .hero {
-    text-align: center;
-    padding: 24px 0 40px;
+    text-align: left;
+    padding: 16px 0 36px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 48px;
+    margin-bottom: 44px;
 }
 
 .eyebrow {
     display: inline-block;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
     color: var(--accent);
-    margin: 0 0 12px;
+    background: var(--accent-soft);
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin: 0 0 16px;
 }
 
 h1 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(30px, 4.5vw, 44px);
-    line-height: 1.2;
+    font-size: clamp(30px, 4.5vw, 46px);
+    line-height: 1.15;
     color: var(--heading);
     margin: 0 0 14px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
 }
 
 .subtitle {
@@ -243,24 +246,15 @@ h1 {
 }
 
 h2 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 27px;
+    font-size: 26px;
+    letter-spacing: -0.01em;
     color: var(--heading);
     margin: 56px 0 18px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--border);
-    position: relative;
-}
-
-h2::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 56px;
-    height: 2px;
-    background: var(--accent);
+    padding-left: 14px;
+    border-left: 3px solid var(--accent);
+    line-height: 1.3;
 }
 
 h2:first-of-type { margin-top: 0; }
@@ -291,19 +285,17 @@ figure {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 10px;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 8px;
+    transition: border-color 0.15s ease;
 }
 
 figure:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
+    border-color: #c9ced6;
 }
 
 figure img {
     width: 100%;
-    border-radius: calc(var(--radius) - 4px);
+    border-radius: 3px;
 }
 
 figure a {
@@ -373,8 +365,8 @@ figure a {
 }
 
 .project-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
 }
 
 .project-card > a {
@@ -387,7 +379,7 @@ figure a {
 
 .project-card .thumb {
     aspect-ratio: 16 / 10;
-    background: #eeeeea;
+    background: #e9ecf0;
     overflow: hidden;
 }
 
@@ -408,7 +400,7 @@ figure a {
     font-size: 14px;
     font-weight: 500;
     background: repeating-linear-gradient(
-        -45deg, #efefeb, #efefeb 10px, #f6f6f3 10px, #f6f6f3 20px
+        -45deg, #e9ecf0, #e9ecf0 10px, #f1f3f6 10px, #f1f3f6 20px
     );
 }
 
@@ -417,16 +409,16 @@ figure a {
 }
 
 .project-card .label {
+    font-family: var(--font-mono);
     font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     color: var(--accent);
     margin: 0 0 6px;
 }
 
 .project-card h3 {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: 21px;
     font-weight: 600;
     color: var(--heading);
@@ -441,7 +433,7 @@ figure a {
 }
 
 .project-card.coming-soon { opacity: 0.75; }
-.project-card.coming-soon:hover { transform: none; box-shadow: var(--shadow-sm); }
+.project-card.coming-soon:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
 
 /* --------------------------------------------------------------------------
    Footer
@@ -451,7 +443,8 @@ figure a {
     border-top: 1px solid var(--border);
     padding: 24px;
     text-align: center;
-    font-size: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px;
     color: var(--muted);
 }
 
