@@ -120,10 +120,18 @@
         </div>
 
 
-        <h2>Gaussian Photo Pyramid Acceleration</h2>
+        <h2>Gaussian Pyramid Acceleration</h2>
         <p>
             The above alignment algorithm is very slow since it needs to exhaustively search over a window of possible displacements. 
-            To accelerate the process, we can use Gaussian Photo Pyramid to reduce the image size and perform the alignment on the smaller image. 
+            And the cost grows with both the window size and the image size.
+            To accelerate the process, we can use Gaussian image pyramid to align the images from coarse to fine.
+
+            Each level of the pyramid is produced from the previous one in two steps, a Gaussian blur to remove high-frequency details and followed by downsampling by a factor of 2.
+            
+            Alignment starts at teh coarsest level, where the image is small so that ±15 pixel exhasustive search is cheap. The resulting offset is then passed down to the next level, 
+            multiplied by 2, and refined within a ±2 pixel window. Repeating this for 3-4 steps could lead to the final offsets.
+
+            Figure 4 shows the results of all the provided images. It is noted that Emir (Figure 4e) was aligned with a 3-level pyramid, while other images used 4 levels.
         </p>
         <h3>Gallary </h3>
         <div class="row">
@@ -236,6 +244,8 @@
             <figure style="visibility: hidden;"></figure>
         </div>
 
+        <h2>Bells and Whistles 😃</h2>
+        <h3>Automatic Cropping</h3>
 
 
     </main>
