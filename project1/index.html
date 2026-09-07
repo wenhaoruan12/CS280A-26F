@@ -264,7 +264,7 @@
 
             For each channel and each side, we can the image line by line from edge inward, within the outer 20%
             of the image. After that, Each line (60% center) is described by the mean brightness of the pixels in that line and the 
-            mean value of the gradient magnitude. We then compare these two numbers with an ideal black line (brightness = 255) and an ideal white line (brightness = 0).
+            mean value of the gradient magnitude. We then compare these two numbers with an ideal black line (brightness = 0) and an ideal white line (brightness = 255).
             A line is treated as a border line if it is close to pure black (mean ≤ 45, gradient ≤ 7) or close to pure white (mean ≥ 251, gradient ≤ 1). 
             The gradient condition makes sure the line has no texture, so that smooth sky or water is not mistaken for a border.
 
