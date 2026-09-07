@@ -256,7 +256,115 @@
 
         <h2>Bells and Whistles 😃</h2>
         <h3>Automatic Cropping</h3>
+        <p>After we successfully align the three BGR images into one, we can automatically crop the 
+            resulting image to remove the borders and focus on the main content. The border comes from the 
+            misalignment of three channels and the original borders of the film. Since the borders come from
+            the original glass plates, and each plate is a single-channel image, so the border can only be 
+            white or black. Based on that, we crop each channel separately instead of the colored image.
 
+            For each channel and each side, we can the image line by line from edge inward, within the outer 20%
+            of the image. After that, Each line (60% center) is described by the mean brightness of the pixels in that line and the 
+            mean value of the gradient magnitude. We then compare these two numbers with an ideal black line (brightness = 255) and an ideal white line (brightness = 0).
+            A line is treated as a border line if it is close to pure black (mean ≤ 45, gradient ≤ 7) or close to pure white (mean ≥ 251, gradient ≤ 1). 
+            The gradient condition makes sure the line has no texture, so that smooth sky or water is not mistaken for a border.
+
+            For each side, we cute at the innermost border line found in any channel. The final crop is the intersection of three channels' crops. 
+            The final cropped images are shown below (refer to Figure 5). 
+        </p>
+                <h3>Gallary </h3>
+        <div class="row fourImage">
+            <figure>
+                <a href="cropped_images/cropped_cathedral.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_cathedral.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5a:</strong> Cathedral<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_monastery.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_monastery.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5b:</strong> Monastery<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_tobolsk.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_tobolsk.jpg" alt="Tobolsk" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5c:</strong> Tobolsk<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_church.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_church.jpg" alt="Church" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5d:</strong> Church<br></p>
+            </figure>
+        </div>
+        <div class="row fourImage">
+            <figure>
+                <a href="cropped_images/cropped_emir.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_emir.jpg" alt="Emir" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5e:</strong> Emir<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_harvesters.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_harvesters.jpg" alt="Harvesters" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5f:</strong> Harvesters<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_icon.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_icon.jpg" alt="Icon" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5g:</strong> Icon<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_ilemselga.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_ilemselga.jpg" alt="Ilemselga" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5h:</strong> Ilemselga<br></p>
+            </figure>
+        </div>
+        <div class="row fourImage">
+            <figure>
+                <a href="cropped_images/cropped_melons.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_melons.jpg" alt="Melons" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5i:</strong> Melons<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_religious_painting.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_religious_painting.jpg" alt="Religious Painting" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5j:</strong> Religious Painting<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_self_portrait.jpg" alt="Self Portrait" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5k:</strong> Self Portrait<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_siren.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_siren.jpg" alt="Siren" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5l:</strong> Siren<br></p>
+            </figure>
+        </div>
+        <div class="row fourImage">
+            <figure>
+                <a href="cropped_images/cropped_three_generations.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_three_generations.jpg" alt="Three Generations" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5m:</strong> Three Generations<br></p>
+            </figure>
+            <figure>
+                <a href="cropped_images/cropped_wharf.jpg" target="_blank" rel="noopener">
+                    <img src="cropped_images/cropped_wharf.jpg" alt="Wharf" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5n:</strong> Wharf<br></p>
+            </figure>
+            <figure style="visibility: hidden;"></figure>
+        </div>
 
     </main>
 
