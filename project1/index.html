@@ -22,7 +22,7 @@
                         <li><a href="../project1/index.html" aria-current="page"><span class="num">Project 1</span><span class="name">Images of the Russian Empire -- Colorizing the Prokudin-Gorskii Photo Collection</span></a></li>
                         <li><a href="../project2/index.html"><span class="num">Project 2</span><span class="name">Fun with Filters and Frequencies</span></a></li>
                         <li><a href="../project3/index.html"><span class="num">Project 3</span><span class="name">Fun with Diffusion Models</span></a></li>
-                        <li><a href="../project4/index.html"><span class="num">Project 4</span><span class="name">Autostitching and Photo Mosaics</span></a></li>
+                        <li><a href="../project4/index.html"><span class="num">Project 4</span><span class="name">Auto-stitching and Photo Mosaics</span></a></li>
                         <li><a href="../project5/index.html"><span class="num">Final Project</span><span class="name">Coming Soon</span></a></li>
                     </ul>
                 </div>
@@ -47,46 +47,54 @@
             never materialized: he left Russia in 1918, right after the revolution, never to return again. Luckily, his RGB glass plate negatives, capturing the last years of the 
             Russian Empire, survived and were purchased in 1948 by the Library of Congress. The LoC has recently digitized the negatives and made them available on-line.
         </p>
+        <div class="row single">
+            <figure>
+                <a href="images/ori_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="images/ori_self_portrait.jpg" alt="Blue Channel" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1:</strong> Original Photo from the Prokudin-Gorskii Collection</p>
+            </figure>
+        </div>
         <h2>Images Alignment</h2>
         <p>
             Toke the Cathedral as an example, the original image consist of three separate images taken with different color filters. 
-            These three images are shown below (refer to Figure 1a, 1b, and 1c).
+            These three images are shown below (refer to Figure 2).
         </p>
         <div class="row square">
             <figure>
                 <a href="images/cathedral_b.png" target="_blank" rel="noopener">
                     <img src="images/cathedral_b.png" alt="Blue Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 1a:</strong> Blue Channel</p>
+                <p class="caption"><strong>Figure 2a:</strong> Blue Channel</p>
             </figure>
             <figure>
                 <a href="images/cathedral_g.png" target="_blank" rel="noopener">
                     <img src="images/cathedral_g.png" alt="Green Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 1b:</strong> Green Channel</p>
+                <p class="caption"><strong>Figure 2b:</strong> Green Channel</p>
             </figure>
             <figure>
                 <a href="images/cathedral_r.png" target="_blank" rel="noopener">
                     <img src="images/cathedral_r.png" alt="Red Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 1c:</strong> Red Channel</p>
+                <p class="caption"><strong>Figure 2c:</strong> Red Channel</p>
             </figure>
         </div>
         <p>
             The easiest way to reconstruct the color image is to use the blue channel of the image as the reference and align the red and green channels to it. 
             However, if we simply stack them together,the three channels are not perfectly aligned.
-            This produces visible color disaligement in the final image, as shown in Figure 2.
+            This produces visible color disaligement in the final image, as shown in Figure 3.
         </p>
         <div class="row single">
             <figure>
                 <a href="images/original_cathedral.jpg" target="_blank" rel="noopener">
                     <img src="images/original_cathedral.jpg" alt="Blue Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 2:</strong> Cathedral Simple Alignment</p>
+                <p class="caption"><strong>Figure 3:</strong> Cathedral Wrong Alignment</p>
             </figure>
         </div>
         <p>
-            Based on this, we have to find some ways to align the three channels and eliminate the misalignment. The easist way is to exhaustively search over a window of possible
+            Based on this, we have to find some ways to align the three channels and eliminate the misalignment. The easiest way is to exhaustively search over a window of possible
             displacements, score each one using some image matching scores such as L2 Norm or Normalized Cross Correlation (NCC). The equations of both scores are listed below:
         </p>
         <h4>L2 Norm</h4>
@@ -108,194 +116,346 @@
             \]
         </p>
         <p>
-            After applying the alignment algorithm, we can get the final aligned image using NCC as shown in Figure 3.
+            After applying the alignment algorithm, we can get the final aligned image using NCC as shown in Figure 4.
         </p>
         <div class="row square">
             <figure>
                 <a href="images/cathedral.jpg" target="_blank" rel="noopener">
                     <img src="images/cathedral.jpg" alt="Blue Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 2a:</strong> Cathedral Simple Alignment</p>
+                <p class="caption"><strong>Figure 4a:</strong> Cathedral Simple Alignment</p>
             </figure>
             <figure>
                 <a href="images/monastery.jpg" target="_blank" rel="noopener">
                     <img src="images/monastery.jpg" alt="Blue Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 2b:</strong> Monastery Simple Alignment</p>
+                <p class="caption"><strong>Figure 4b:</strong> Monastery Simple Alignment</p>
             </figure>
             <figure>   
                 <a href="images/tobolsk.jpg" target="_blank" rel="noopener">
                     <img src="images/tobolsk.jpg" alt="Blue Channel" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 2c:</strong> Tobolsk Simple Alignment</p>
+                <p class="caption"><strong>Figure 4c:</strong> Tobolsk Simple Alignment</p>
             </figure>
         </div>
 
 
         <h2>Gaussian Pyramid Acceleration</h2>
         <p>
-            The above alignment algorithm is very slow since it needs to exhaustively search over a window of possible displacements. 
-            And the cost grows with both the window size and the image size.
-            To accelerate the process, we can use Gaussian image pyramid to align the images from coarse to fine.
+            The alignment algorithm above is slow because it exhaustively searches over a window of possible displacements.
+            The cost grows with both the window size and the image size.
+            To speed it up, we use a Gaussian image pyramid and align the images from coarse to fine.
 
-            Each level of the pyramid is produced from the previous one in two steps, a Gaussian blur to remove high-frequency details and followed by downsampling by a factor of 2.
+            Each level of the pyramid is produced from the previous one in two steps, 
+            a Gaussian blur to remove high-frequency details and followed by downsampling by a factor of 2.
             
-            Alignment starts at teh coarsest level, where the image is small so that ±15 pixel exhasustive search is cheap. The resulting offset is then passed down to the next level, 
-            multiplied by 2, and refined within a ±2 pixel window. Repeating this for 3-4 steps could lead to the final offsets.
-
-            Figure 4 shows the results of all the provided images. It is noted that Emir (Figure 4e) was aligned with a 3-level pyramid, while other images used 4 levels.
+            Alignment starts at the coarsest level, where the image is small and an exhaustive &plusmn;15 pixel search is cheap.
+            The resulting offset is then multiplied by 2, passed down to the next level, and refined within a &plusmn;3 pixel window.
         </p>
-        <h3>Gallary </h3>
+        <p>
+            However, this method does not work well for every image. The Emir image is one example.
+            In this image, the three color channels have very different brightness, so matching raw pixel 
+            intensities gives a wrong alignment.
+
+            To handle this, we use gradient alignment, which compares the gradients of the images instead 
+            of their intensities. Gradients capture the edges in the image, which stay consistent across 
+            channels even when the brightness does not, so the alignment is more robust. 
+            The gradient magnitude is computed as follows:
+
+            $$ |\nabla I| = \sqrt{\left(\frac{\partial I}{\partial x}\right)^2 + \left(\frac{\partial I}{\partial y}\right)^2} $$
+
+            where \(I\) is the image intensity of each channel, and \(\nabla I\) is its gradient.
+            We then compute NCC on the gradient magnitude images instead of the raw intensities, and use it to align the channels. 
+            Figure 5 shows the results of all the provided images. 
+        </p>
+        <h3>Gallery </h3>
         <div class="row fourImage">
             <figure>
-                <a href="images/cathedral.jpg" target="_blank" rel="noopener">
-                    <img src="images/cathedral.jpg" alt="Cathedral" loading="lazy">
+                <a href="results/align_cathedral.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_cathedral.jpg" alt="Cathedral" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4a:</strong> Cathedral<br>
+                <p class="caption"><strong>Figure 5a:</strong> Cathedral<br>
                     G offset: (2, 5) &nbsp;|&nbsp; R offset: (3, 12) &nbsp;|&nbsp; Time: 0.08s</p>
             </figure>
             <figure>
-                <a href="images/monastery.jpg" target="_blank" rel="noopener">
-                    <img src="images/monastery.jpg" alt="Monastery" loading="lazy">
+                <a href="results/align_monastery.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_monastery.jpg" alt="Monastery" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4b:</strong> Monastery<br>
+                <p class="caption"><strong>Figure 5b:</strong> Monastery<br>
                     G offset: (2, -3) &nbsp;|&nbsp; R offset: (2, 3) &nbsp;|&nbsp; Time: 0.08s</p>
             </figure>
             <figure>
-                <a href="images/tobolsk.jpg" target="_blank" rel="noopener">
-                    <img src="images/tobolsk.jpg" alt="Tobolsk" loading="lazy">
+                <a href="results/align_tobolsk.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_tobolsk.jpg" alt="Tobolsk" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4c:</strong> Tobolsk<br>
+                <p class="caption"><strong>Figure 5c:</strong> Tobolsk<br>
                     G offset: (3, 3) &nbsp;|&nbsp; R offset: (3, 6) &nbsp;|&nbsp; Time: 0.08s</p>
             </figure>
             <figure>
-                <a href="images/church.jpg" target="_blank" rel="noopener">
-                    <img src="images/church.jpg" alt="Church" loading="lazy">
+                <a href="results/align_church.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_church.jpg" alt="Church" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4d:</strong> Church<br>
-                    G offset: (4, 25) &nbsp;|&nbsp; R offset: (-4, 58) &nbsp;|&nbsp; Time: 4.11s</p>
+                <p class="caption"><strong>Figure 5d:</strong> Church<br>
+                    G offset: (4, 25) &nbsp;|&nbsp; R offset: (-4, 58) &nbsp;|&nbsp; Time: 3.95s</p>
             </figure>
         </div>
         <div class="row fourImage">
             <figure>
-                <a href="images/emir.jpg" target="_blank" rel="noopener">
-                    <img src="images/emir.jpg" alt="Emir" loading="lazy">
+                <a href="results/align_emir.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_emir.jpg" alt="Emir" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4e:</strong> Emir<br>
-                    G offset: (24, 49) &nbsp;|&nbsp; R offset: (-205, 141) &nbsp;|&nbsp; Time: 4.58s</p>
+                <p class="caption"><strong>Figure 5e:</strong> Emir<br>
+                    G offset: (24, 49) &nbsp;|&nbsp; R offset: (40, 107) &nbsp;|&nbsp; Time: 4.02s</p>
             </figure>
             <figure>
-                <a href="images/harvesters.jpg" target="_blank" rel="noopener">
-                    <img src="images/harvesters.jpg" alt="Harvesters" loading="lazy">
+                <a href="results/align_harvesters.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_harvesters.jpg" alt="Harvesters" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4f:</strong> Harvesters<br>
-                    G offset: (17, 60) &nbsp;|&nbsp; R offset: (13, 124) &nbsp;|&nbsp; Time: 4.04s</p>
+                <p class="caption"><strong>Figure 5f:</strong> Harvesters<br>
+                    G offset: (17, 60) &nbsp;|&nbsp; R offset: (13, 124) &nbsp;|&nbsp; Time: 3.78s</p>
             </figure>
             <figure>
-                <a href="images/icon.jpg" target="_blank" rel="noopener">
-                    <img src="images/icon.jpg" alt="Icon" loading="lazy">
+                <a href="results/align_icon.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_icon.jpg" alt="Icon" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4g:</strong> Icon<br>
-                    G offset: (17, 41) &nbsp;|&nbsp; R offset: (23, 89) &nbsp;|&nbsp; Time: 4.18s</p>
+                <p class="caption"><strong>Figure 5g:</strong> Icon<br>
+                    G offset: (17, 41) &nbsp;|&nbsp; R offset: (23, 89) &nbsp;|&nbsp; Time: 4.09s</p>
             </figure>
             <figure>
-                <a href="images/ilemselga.jpg" target="_blank" rel="noopener">
-                    <img src="images/ilemselga.jpg" alt="Ilemselga" loading="lazy">
+                <a href="results/align_ilemselga.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_ilemselga.jpg" alt="Ilemselga" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4h:</strong> Ilemselga<br>
-                    G offset: (7, 40) &nbsp;|&nbsp; R offset: (11, 130) &nbsp;|&nbsp; Time: 4.33s</p>
-            </figure>
-        </div>
-        <div class="row fourImage">
-            <figure>
-                <a href="images/melons.jpg" target="_blank" rel="noopener">
-                    <img src="images/melons.jpg" alt="Melons" loading="lazy">
-                </a>
-                <p class="caption"><strong>Figure 4i:</strong> Melons<br>
-                    G offset: (11, 82) &nbsp;|&nbsp; R offset: (13, 178) &nbsp;|&nbsp; Time: 4.22s</p>
-            </figure>
-            <figure>
-                <a href="images/religious_painting.jpg" target="_blank" rel="noopener">
-                    <img src="images/religious_painting.jpg" alt="Religious Painting" loading="lazy">
-                </a>
-                <p class="caption"><strong>Figure 4j:</strong> Religious Painting<br>
-                    G offset: (3, 28) &nbsp;|&nbsp; R offset: (7, 68) &nbsp;|&nbsp; Time: 4.14s</p>
-            </figure>
-            <figure>
-                <a href="images/self_portrait.jpg" target="_blank" rel="noopener">
-                    <img src="images/self_portrait.jpg" alt="Self Portrait" loading="lazy">
-                </a>
-                <p class="caption"><strong>Figure 4k:</strong> Self Portrait<br>
-                    G offset: (29, 79) &nbsp;|&nbsp; R offset: (37, 176) &nbsp;|&nbsp; Time: 4.25s</p>
-            </figure>
-            <figure>
-                <a href="images/siren.jpg" target="_blank" rel="noopener">
-                    <img src="images/siren.jpg" alt="Siren" loading="lazy">
-                </a>
-                <p class="caption"><strong>Figure 4l:</strong> Siren<br>
-                    G offset: (-6, 49) &nbsp;|&nbsp; R offset: (-25, 96) &nbsp;|&nbsp; Time: 4.34s</p>
+                <p class="caption"><strong>Figure 5h:</strong> Ilemselga<br>
+                    G offset: (7, 40) &nbsp;|&nbsp; R offset: (11, 130) &nbsp;|&nbsp; Time: 4.17s</p>
             </figure>
         </div>
         <div class="row fourImage">
             <figure>
-                <a href="images/three_generations.jpg" target="_blank" rel="noopener">
-                    <img src="images/three_generations.jpg" alt="Three Generations" loading="lazy">
+                <a href="results/align_melons.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_melons.jpg" alt="Melons" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4m:</strong> Three Generations<br>
-                    G offset: (14, 53) &nbsp;|&nbsp; R offset: (11, 112) &nbsp;|&nbsp; Time: 4.24s</p>
+                <p class="caption"><strong>Figure 5i:</strong> Melons<br>
+                    G offset: (11, 82) &nbsp;|&nbsp; R offset: (13, 178) &nbsp;|&nbsp; Time: 3.95s</p>
             </figure>
             <figure>
-                <a href="images/wharf.jpg" target="_blank" rel="noopener">
-                    <img src="images/wharf.jpg" alt="Wharf" loading="lazy">
+                <a href="results/align_religious_painting.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_religious_painting.jpg" alt="Religious Painting" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 4n:</strong> Wharf<br>
-                    G offset: (-7, 15) &nbsp;|&nbsp; R offset: (-16, 83) &nbsp;|&nbsp; Time: 4.28s</p>
+                <p class="caption"><strong>Figure 5j:</strong> Religious Painting<br>
+                    G offset: (3, 28) &nbsp;|&nbsp; R offset: (7, 68) &nbsp;|&nbsp; Time: 3.96s</p>
+            </figure>
+            <figure>
+                <a href="results/align_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_self_portrait.jpg" alt="Self Portrait" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5k:</strong> Self Portrait<br>
+                    G offset: (29, 79) &nbsp;|&nbsp; R offset: (37, 176) &nbsp;|&nbsp; Time: 4.04s</p>
+            </figure>
+            <figure>
+                <a href="results/align_siren.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_siren.jpg" alt="Siren" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5l:</strong> Siren<br>
+                    G offset: (-6, 49) &nbsp;|&nbsp; R offset: (-25, 96) &nbsp;|&nbsp; Time: 4.15s</p>
+            </figure>
+        </div>
+        <div class="row fourImage">
+            <figure>
+                <a href="results/align_three_generations.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_three_generations.jpg" alt="Three Generations" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5m:</strong> Three Generations<br>
+                    G offset: (14, 53) &nbsp;|&nbsp; R offset: (11, 112) &nbsp;|&nbsp; Time: 3.89</p>
+            </figure>
+            <figure>
+                <a href="results/align_wharf.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_wharf.jpg" alt="Wharf" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 5n:</strong> Wharf<br>
+                    G offset: (-7, 15) &nbsp;|&nbsp; R offset: (-16, 83) &nbsp;|&nbsp; Time: 4.10s</p>
             </figure>
             <figure style="visibility: hidden;"></figure>
         </div>
 
+
         <!-- <h1>Bells and Whistles 😃</h1> -->
         <h2>Automatic Cropping</h2>
-        <p>After we successfully align the three BGR images into one, we can automatically crop the 
-            resulting image to remove the borders and focus on the main content. The border comes from the 
-            misalignment of three channels and the original borders of the film. Since the borders come from
-            the original glass plates, and each plate is a single-channel image, so the border can only be 
-            white or black. Based on that, we crop each channel separately instead of the colored image.
-
-            For each channel and each side, we can the image line by line from edge inward, within the outer 20%
-            of the image. After that, Each line (60% center) is described by the mean brightness of the pixels in that line and the 
-            mean value of the gradient magnitude. We then compare these two numbers with an ideal black line (brightness = 0) and an ideal white line (brightness = 255).
-            A line is treated as a border line if it is close to pure black (mean ≤ 45, gradient ≤ 7) or close to pure white (mean ≥ 251, gradient ≤ 1). 
-            The gradient condition makes sure the line has no texture, so that smooth sky or water is not mistaken for a border.
-
-            For each side, we cute at the innermost border line found in any channel. The final crop is the intersection of three channels' crops. 
-            The final cropped images are shown below (refer to Figure 5). 
+        <p>
+            After we align the three BGR plates into one image, we automatically crop the result to remove the borders.
+            The borders come from two sources: the white and black frame of the original glass plates, and the colored
+            fringes caused by shifting the three channels. Each plate is a single-channel image, so its border can only be
+            white (scanner background) or black (plate frame). The colored fringes appear only because the three channels
+            are shifted and their borders no longer overlap. Based on that, we crop each channel separately instead of the
+            colored image.
         </p>
-                <h3>Gallary </h3>
+        <p>
+            For each channel and each side, we scan the image line by line from the edge inward, within the outer 15% of
+            the image. Each line (its central 60%) is described by two numbers: the mean brightness and the mean gradient
+            magnitude. We selected these two standard features because they effectively capture the characteristics of 
+            border lines: uniform brightness and low texture. If we only considered brightness, 
+            textured regions with similar mean brightness could be mistaken for borders such as sky or water.
+
+            
+            We compare these two numbers with an ideal black line (brightness = 0) and an ideal white line
+            (brightness = 255). A line is treated as a border line if it is close to pure black (mean &le; 45, gradient &le; 7)
+            or close to pure white (mean &ge; 251, gradient &le; 1).
+        </p>
+        <p>
+            For each side, we cut at the innermost border line found in the channel. The final crop is the intersection of
+            the three channels' crops, plus a 2-pixel safety margin.  The whole process takes a single pass over each channel.
+            The cropped images are shown below (refer to Figure 6).
+        </p>
+        <div class="row twoImage">
+            <figure>
+                <a href="results/align_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/align_self_portrait.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 6a:</strong> Before Cropping<br></p>
+            </figure>
+            <figure>
+                <a href="results/cropped_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/cropped_self_portrait.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 6b:</strong> After Cropping<br></p>
+            </figure>
+        </div>
+        
+
+        <h2>Automatic White Balance and Gray World Assumption</h2>
+        <p>
+            The automatic white balance algorithm aims to correct this color cast. 
+            During photograph, the camera sensor captures light through different color conditions.
+            This can result in a color cast in the captured image, some images look yellow, other look blue.
+            White balance estimates this cast and removes it.
+        </p>
+        <p>
+            In this problem, we use the <b>gray world assumption</b>, which states that the
+            average color of a natural scene should be gray. In other words, the means of the R, G, and B
+            channels should be equal. In practice, we compute the mean of each channel, and scale each channel
+            so that its mean matches the overall gray level:
+            $$
+            \bar{I}_{\text{gray}} = \frac{\bar{I}_R + \bar{I}_G + \bar{I}_B}{3}
+            $$
+            $$
+            g_c = \frac{\bar{I}_{\text{gray}}}{\bar{I}_c}, \quad c \in \{R, G, B\}
+            $$
+            $$
+            I'_c(x, y) = g_c \cdot I_c(x, y)
+            $$
+            where \(\bar{I}_c\) is the mean of channel \(c\), \(g_c\) is the gain applied to that channel,
+            and \(I'_c\) is the corrected channel. After scaling, all three channels have the same mean
+            \(\bar{I}_{\text{gray}}\), so the color cast is removed.
+        </p>
+        <p>
+            The before and after images are shown below (refer to Figure 7). 
+            The white balance correction removes the overall color cast,
+            making the image appear more natural. 
+        </p>
+        <div class="row twoImage">
+            <figure>
+                <a href="results/cropped_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/cropped_self_portrait.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 7a:</strong> Before White Balance<br></p>
+            </figure>
+            <figure>
+                <a href="results/wb_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/wb_self_portrait.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 7b:</strong> After White Balance<br></p>
+            </figure>
+        </div>
+
+        <h2>Better Color Map</h2>
+        <p>
+            We manually tuned a 3&times;3 color matrix to improve the overall color balance of the image.
+            Each output channel is a linear combination of the three input channels:
+            $$
+            \begin{bmatrix} R' \\ G' \\ B' \end{bmatrix}
+            =
+            \begin{bmatrix}
+             1.15 & -0.10 & -0.05 \\
+            -0.10 &  1.30 & -0.20 \\
+            -0.10 & -0.20 &  1.30
+            \end{bmatrix}
+            \begin{bmatrix} R \\ G \\ B \end{bmatrix}
+            $$
+            The diagonal entries are larger than 1 and the off-diagonal entries are negative, so each channel is
+            boosted while the leakage from the other two channels is suppressed. This increases the saturation of the image.
+        </p>
+        <p>
+            The matrix is applied after white balance and before contrast adjustment.
+            One limitation we found is in the Emir image: its G plate has a different tone curve from the other two,
+            so dark neutral surfaces look purple while bright ones look neutral. A single linear matrix cannot fix this,
+            since it applies the same correction to all brightness levels.
+            The before and after images are shown in Figure 8.
+        </p>
+        <div class="row twoImage">
+            <figure>
+                <a href="results/wb_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/wb_self_portrait.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 8a:</strong> Before Color Improvement<br></p>
+            </figure>
+            <figure>
+                <a href="results/color_improved_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/color_improved_self_portrait.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 8b:</strong> After Color Improvement<br></p>
+            </figure>
+        </div>
+
+        <h2>Automatic Contrast</h2>
+        <p>
+            Finally we clip the intensities at fixed cut points lo = 0.08 and hi = 0.92 of the range: values below 20
+            become 0, values above 235 become 255, and everything in between is stretched linearly. The same cut points are
+            used for all three channels, so the color ratios stay the same and only the contrast changes. 
+            The before and after images are shown below (refer to Figure 9). We can see
+            that the coat of the man in the image appears more dark.
+        </p>
+        <div class="row twoImage">
+            <figure>
+                <a href="results/color_improved_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/color_improved_self_portrait.jpg" alt="Monastery" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 9a:</strong> After Auto Contrast<br></p>
+            </figure>
+            <figure>
+                <a href="results/final_self_portrait.jpg" target="_blank" rel="noopener">
+                    <img src="results/final_self_portrait.jpg" alt="Cathedral" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 9b:</strong> Before Automatic Contrast<br></p>
+            </figure>
+        </div>
+        
+        <h2>Final gallery</h2>
+        The following gallery shows the final results after all processing steps.
+        From using NCC for alignment, cropping, white balance, color improvement, to automatic contrast adjustment, 
+        each image has undergone a series of processing steps to enhance its visual quality.
         <div class="row fourImage">
             <figure>
                 <a href="results/final_cathedral.jpg" target="_blank" rel="noopener">
                     <img src="results/final_cathedral.jpg" alt="Cathedral" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5a:</strong> Cathedral<br></p>
+                <p class="caption"><strong>Figure 9a:</strong> Cathedral<br></p>
             </figure>
             <figure>
                 <a href="results/final_monastery.jpg" target="_blank" rel="noopener">
                     <img src="results/final_monastery.jpg" alt="Monastery" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5b:</strong> Monastery<br></p>
+                <p class="caption"><strong>Figure 9b:</strong> Monastery<br></p>
             </figure>
             <figure>
                 <a href="results/final_tobolsk.jpg" target="_blank" rel="noopener">
                     <img src="results/final_tobolsk.jpg" alt="Tobolsk" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5c:</strong> Tobolsk<br></p>
+                <p class="caption"><strong>Figure 9c:</strong> Tobolsk<br></p>
             </figure>
             <figure>
                 <a href="results/final_church.jpg" target="_blank" rel="noopener">
                     <img src="results/final_church.jpg" alt="Church" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5d:</strong> Church<br></p>
+                <p class="caption"><strong>Figure 9d:</strong> Church<br></p>
             </figure>
         </div>
         <div class="row fourImage">
@@ -303,25 +463,25 @@
                 <a href="results/final_emir.jpg" target="_blank" rel="noopener">
                     <img src="results/final_emir.jpg" alt="Emir" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5e:</strong> Emir<br></p>
+                <p class="caption"><strong>Figure 9e:</strong> Emir<br></p>
             </figure>
             <figure>
                 <a href="results/final_harvesters.jpg" target="_blank" rel="noopener">
                     <img src="results/final_harvesters.jpg" alt="Harvesters" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5f:</strong> Harvesters<br></p>
+                <p class="caption"><strong>Figure 9f:</strong> Harvesters<br></p>
             </figure>
             <figure>
                 <a href="results/final_icon.jpg" target="_blank" rel="noopener">
                     <img src="results/final_icon.jpg" alt="Icon" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5g:</strong> Icon<br></p>
+                <p class="caption"><strong>Figure 9g:</strong> Icon<br></p>
             </figure>
             <figure>
                 <a href="results/final_ilemselga.jpg" target="_blank" rel="noopener">
                     <img src="results/final_ilemselga.jpg" alt="Ilemselga" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5h:</strong> Ilemselga<br></p>
+                <p class="caption"><strong>Figure 9h:</strong> Ilemselga<br></p>
             </figure>
         </div>
         <div class="row fourImage">
@@ -329,25 +489,25 @@
                 <a href="results/final_melons.jpg" target="_blank" rel="noopener">
                     <img src="results/final_melons.jpg" alt="Melons" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5i:</strong> Melons<br></p>
+                <p class="caption"><strong>Figure 9i:</strong> Melons<br></p>
             </figure>
             <figure>
                 <a href="results/final_religious_painting.jpg" target="_blank" rel="noopener">
                     <img src="results/final_religious_painting.jpg" alt="Religious Painting" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5j:</strong> Religious Painting<br></p>
+                <p class="caption"><strong>Figure 9j:</strong> Religious Painting<br></p>
             </figure>
             <figure>
                 <a href="results/final_self_portrait.jpg" target="_blank" rel="noopener">
                     <img src="results/final_self_portrait.jpg" alt="Self Portrait" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5k:</strong> Self Portrait<br></p>
+                <p class="caption"><strong>Figure 9k:</strong> Self Portrait<br></p>
             </figure>
             <figure>
                 <a href="results/final_siren.jpg" target="_blank" rel="noopener">
                     <img src="results/final_siren.jpg" alt="Siren" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5l:</strong> Siren<br></p>
+                <p class="caption"><strong>Figure 9l:</strong> Siren<br></p>
             </figure>
         </div>
         <div class="row fourImage">
@@ -355,13 +515,13 @@
                 <a href="results/final_three_generations.jpg" target="_blank" rel="noopener">
                     <img src="results/final_three_generations.jpg" alt="Three Generations" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5m:</strong> Three Generations<br></p>
+                <p class="caption"><strong>Figure 9m:</strong> Three Generations<br></p>
             </figure>
             <figure>
                 <a href="results/final_wharf.jpg" target="_blank" rel="noopener">
                     <img src="results/final_wharf.jpg" alt="Wharf" loading="lazy">
                 </a>
-                <p class="caption"><strong>Figure 5n:</strong> Wharf<br></p>
+                <p class="caption"><strong>Figure 9n:</strong> Wharf<br></p>
             </figure>
             <figure style="visibility: hidden;"></figure>
         </div>

@@ -335,6 +335,13 @@ figure a {
     object-fit: cover;
 }
 
+.row.twoImage img {
+    width: 100%;
+    aspect-ratio: 1/ 1; 
+    object-fit: cover;   
+    display: block;
+}
+
 .row.fourImage {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -345,7 +352,7 @@ figure a {
 }
 
 .single {
-    max-width: 480px;
+    max-width: 400px;
     margin: 28px auto 24px;
 }
 
