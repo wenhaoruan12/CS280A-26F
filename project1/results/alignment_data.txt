@@ -1,0 +1,14 @@
+cathedral.jpg: offset_g=(5, 2), offset_r=(12, 3), time=0.1s
+church.tif: offset_g=(25, 4), offset_r=(58, -4), time=3.9s
+emir.tif: offset_g=(49, 24), offset_r=(107, 40), time=3.9s
+harvesters.tif: offset_g=(60, 17), offset_r=(124, 13), time=3.8s
+icon.tif: offset_g=(41, 17), offset_r=(89, 23), time=3.9s
+ilemselga.tif: offset_g=(40, 7), offset_r=(130, 11), time=4.0s
+melons.tif: offset_g=(82, 11), offset_r=(178, 13), time=3.9s
+monastery.jpg: offset_g=(-3, 2), offset_r=(3, 2), time=0.1s
+religous_painting.tif: offset_g=(28, 3), offset_r=(68, 7), time=3.9s
+self_portrait.tif: offset_g=(79, 29), offset_r=(176, 37), time=4.0s
+siren.tif: offset_g=(49, -6), offset_r=(96, -25), time=4.1s
+three_generations.tif: offset_g=(53, 14), offset_r=(112, 11), time=3.9s
+tobolsk.jpg: offset_g=(3, 3), offset_r=(6, 3), time=0.1s
+wharf.tif: offset_g=(15, -7), offset_r=(83, -16), time=4.0s
