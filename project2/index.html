@@ -68,7 +68,7 @@
                     out[height, width] += img_padded[height + k_height, width + k_width] * kernel[k_height, k_width]
     return out</code></pre>
 
-            <p><strong>Two loops:</strong> the two inner loops are replaced by <code>np.sum</code> of the image window and the kernel, followed by a sum.</p>
+            <p><strong>Two loops:</strong> the two inner loops are replaced by an element-wise product of the image window and the kernel, followed by <code>np.sum</code>.</p>
     <pre><code class="language-python">def conv2d_2loop(img, kernel, padding_value = 0):
     '''
     Two loops to construct the 2D convolution with padding
@@ -109,7 +109,7 @@
 for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
     show_filters(img, conv)</code></pre>
 
-        <p>Figures 1 show the results of applying the different convolution implementations to my self-portrait with various filters.</p>
+        <p>Figure 1 shows the results of applying the different convolution implementations to my self-portrait with various filters.</p>
         <div class="row stack">
             <figure>
                 <a href="images/conv2d_4loop_filters.png" target="_blank" rel="noopener">
@@ -131,10 +131,17 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             </figure>
         </div>
 
-        <h4>Runtime comparison</h4>
+        <h4>Runtime comparison and boundary handling</h4>
+        <p>
         From the timing results above, we can see that the four-loop convolution is the slowest, followed by the two-loop convolution, 
-        and the `scipy.signal.convolve2d` implementation is the fastest. 
-
+        and the <code>scipy.signal.convolve2d</code> implementation is the fastest. 
+        </p>
+        <p>
+            For the boundary, the four-loop and two-loop convolutions use zero padding, while
+            the <code>scipy.signal.convolve2d</code> implementation uses the default
+            <code>boundary='fill', fillvalue=0</code>, which is zero padding as well (<code>mode='same'</code> only crops the output to the input size). So all three implementations 
+            handle boundaries using zero padding.
+        </p>
         <h3>Part 1.2 Finite Difference Operator</h3>
         <h4>Show the partial derivatives of the cameraman image</h4>
         <p>Use <code>scipy.signal.convolve2d</code> to convolve the image with finite difference filters \(D_x\) and \(D_y\)</p>
@@ -162,9 +169,20 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             thresholds helps in reducing noise. We find that threshold 40 works well for this image.</p>
         <h3>Part 1.3 Derivative of Gaussian (DoG) Filter</h3>
         <p>We use a Gaussian filter to blur the original image. First, we use <code>cv2.getGaussianKernel()</code> to create a 1D Gaussian kernel,
-        and then take the outer product of the 1D kernel with itself to create a 2D Gaussian filter \(K_G\). 
+        and then take the outer product of the 1D kernel with itself to create a 2D Gaussian filter \(K_G\). Then, we compute the derivative of 
+        Gaussian (DoG) filters by convolving \(K_G\) with the finite difference filters \(D_x\) and \(D_y\) (As shown in Figure 4). The equation
+        can be written as:
+        $$
+        DoG_x = K_G * D_x; \quad DoG_y = K_G * D_y
+        $$
         </p>
-        <h4>Create a blurred version fo the original image by convolving it with a Gaussian filter</h4>
+        <figure>
+            <a href="images/dog_filters.jpg" target="_blank" rel="noopener">
+                <img src="images/dog_filters.jpg" alt="dog_filters" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 4:</strong> Derivative of Gaussian (DoG) filters</p>
+        </figure>
+        <h4>Create a blurred version of the original image by convolving it with a Gaussian filter</h4>
         <p>In this step, we create a blurred version of the original image by convolving it with a Gaussian filter first, and then 
             compute the gradient magnitude of the blurred image. The equation can be written as:
             $$
@@ -176,7 +194,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             <a href="images/cameraman_blurred_V1.png" target="_blank" rel="noopener">
                 <img src="images/cameraman_blurred_V1.png" alt="cameraman_blurred_V1" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 4:</strong> Gradient magnitude of the cameraman image after applying Gaussian blur</p>
+            <p class="caption"><strong>Figure 5:</strong> Gradient magnitude of the cameraman image after applying Gaussian blur (blur first, then differentiate)</p>
         </figure>
         <p>We find that blurring the image with a Gaussian filter helps in reducing noise and makes the edges more prominent when 
             computing the gradient magnitude. After applying the Gaussian blur, threshold 40 works well for this image.</p>
@@ -191,15 +209,15 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
         </p>
         <figure>
             <a href="images/cameraman_blurred_V2.png" target="_blank" rel="noopener">
-                <img src="images/cameraman_blurred_V2.png" alt="cameraman_blurred_V1" loading="lazy">
+                <img src="images/cameraman_blurred_V2.png" alt="cameraman_blurred_V2" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 5:</strong> Gradient magnitude of the cameraman image after applying Gaussian blur</p>
+            <p class="caption"><strong>Figure 6:</strong> Gradient magnitude of the cameraman image using the DoG filters (differentiate the Gaussian first)</p>
         </figure>
-        <p>Figure 4 and 5 show the difference between blurring the image first and blurring the gaussian filter first. We can observe
-            that both approaches produce the same result. This is becuase the convolution operation is <strong>commutative</strong>, meaning that the 
+        <p>Figures 5 and 6 show the difference between blurring the image first and differentiating the Gaussian filter first. We can observe
+            that both approaches produce the same result. This is because the convolution operation is <strong>associative</strong>, meaning that the 
             order of convolution does not affect the final result.
             $$
-            (I * K_G) * D_x = I * (D_x * K_G), \quad (I * K_G) * D_y = I * (D_y * K_G)
+            (I * K_G) * D_x = I * (K_G * D_x), \quad (I * K_G) * D_y = I * (K_G * D_y)
             $$
             $$
             DoG_1 = \sqrt{((I * K_G) * D_x)^2 + ((I * K_G) * D_y)^2} = \sqrt{(I * (K_G * D_x))^2 + (I * (K_G * D_y))^2} = DoG_2
@@ -208,7 +226,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
         <h3>Bells & Whistles</h3>
         <h4>Compute the image gradient orientations without using built-in functions</h4>
         
-        <p>Since we can't use built-in functions such as arctan or arccos, we propose using the taylor series expansion to approximate the arctangent function,
+        <p>Since we can't use built-in functions such as arctan or arccos, we propose using the Taylor series expansion to approximate the arctangent function,
             which can be expressed as:
             $$
             \arctan(x) \approx \sum_{n=0}^\infty (-1)^n \frac{x^{2n+1}}{2n+1}    = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \cdots \quad \text{for } |x| \le 1.
@@ -227,26 +245,44 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             Finally, we change the orientation based on the signs of the original gradient components to ensure the correct quadrant for the angle.
         </p>
         <h4>Visualize the gradient orientations with HSV color space</h4>
-        <p>Figure 6 is the visualization of the gradient orientations using the HSV color space.</p>
+        <p>Figure 7 is the visualization of the gradient orientations using the HSV color space.</p>
         <figure>
             <a href="images/angle_matrix_hsv.png" target="_blank" rel="noopener">
-                <img src="images/angle_matrix_hsv.png" alt="angle_matrix_hsv" loading="lazy", style="width: 60%; height: auto; display: block; margin: 0 auto;">
+                <img src="images/angle_matrix_hsv.png" alt="angle_matrix_hsv" loading="lazy" style="width: 60%; height: auto; display: block; margin: 0 auto;">
             </a>
-            <p class="caption"><strong>Figure 6:</strong> Visualization of the gradient orientations using the HSV color space.</p>
+            <p class="caption"><strong>Figure 7:</strong> Visualization of the gradient orientations using the HSV color space.</p>
         </figure>
         <h2>Part 2: Fun with Frequencies</h2>
         <h3>Part 2.1 Image Sharpening</h3>
+        <p>As introduced before, gaussian filter can blur the image. If we use the original image to subtract the blurred image, we can
+            obtain the high-frequency components of the image, which can then be added back to the original image to achieve sharpening effect.
+            The equation for image sharpening can be written as:
+            $$I_{\text{blurred}} = I * G(\sigma), \quad I_{\text{high}} = I - I_{\text{blurred}}, \quad I_{\text{sharpened}} = I + \alpha I_{\text{high}}$$
+            Figures 8 and 9 show the results of image sharpening for the Taj Mahal and a temple, respectively. As can be seen, as \(\alpha\) increases, 
+            the sharpening effect becomes more pronounced.
+        </p>
         <figure>
-            <a href="images/taj_sharpening.png" target="_blank" rel="noopener">
-                <img src="images/taj_sharpening.png" alt="angle_matrix_hsv" loading="lazy">
-            </a>    
-            <p class="caption"><strong>Figure 7:</strong> Original, blurred, high frequency and sharpened images of the Taj Mahal.</p>
+            <a href="images/taj_sharpening.jpg" target="_blank" rel="noopener">
+                <img src="images/taj_sharpening.jpg" alt="taj_sharpening" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 8:</strong> Original, blurred, high frequency and sharpened images of the Taj Mahal (\(\sigma = 1\)).</p>
         </figure>
         <figure>
-            <a href="images/temple_sharpening.png" target="_blank" rel="noopener">
-                <img src="images/temple_sharpening.png" alt="angle_matrix_hsv" loading="lazy">
+            <a href="images/temple_sharpening.jpg" target="_blank" rel="noopener">
+                <img src="images/temple_sharpening.jpg" alt="temple_sharpening" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 8:</strong> Original, blurred, high frequency and sharpened images of a temple.</p>
+            <p class="caption"><strong>Figure 9:</strong> Original, blurred, high frequency and sharpened images of a temple (\(\sigma = 5\)).</p>
+        </figure>
+        <h4>Pick a sharp image, blur it and sharpen it again</h4>
+        <p>Figure 10 shows the results of sharpening, blurring, and re-sharpening the Taj Mahal images (\(\alpha = 1, \sigma = 1\)).
+            It is noted that re-sharpen cannot restore the high-frequency details that were lost during the blurring process.
+            The re-sharpen process can only enhance the existing high-frequency details from the blurred image.
+        </p>
+        <figure>
+            <a href="images/taj_sharpen_blur_sharpen.jpg" target="_blank" rel="noopener">
+                <img src="images/taj_sharpen_blur_sharpen.jpg" alt="taj_sharpen_blur_sharpen" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 10:</strong> Sharpened, blurred, and re-sharpened images of the Taj Mahal.</p>
         </figure>
         <h3>Part 2.2 Hybrid Images</h3>
         <h4>High and Low Frequency Filters</h4>
@@ -260,7 +296,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             $$
             \text{kernel size} \approx 6\sigma + 1
             $$
-            For the high-frequency filter, we can simply subtract the gaussian matrix from impluse matrix which is defined as:
+            For the high-frequency filter, we can simply subtract the gaussian matrix from the impulse matrix which is defined as:
             $$
             H(\sigma) = I - G(\sigma); \quad I = \underbrace{\begin{bmatrix}
             0 & &  \cdots & & 0\\ 0 & \cdots & 1 & \cdots & 0 \\ 0 & &  \cdots & & 0
@@ -273,25 +309,29 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             $$
             \text{Hybrid Image} = \text{Low-Frequency Image} + \text{High-Frequency Image}
             $$
+            Figure 11 shows an example of a hybrid image constructed from Derek and Nutmeg images. In this figure
+            we selected the low-frequency component of Derek and the high-frequency component of Nutmeg, since the
+            cat is more prominent in the high-frequency component with its fur. After some experimentation, we select
+            \( \sigma_{\text{low}} = 12, \sigma_{\text{high}} = 4 \) for the Gaussian filters used in this example.
         </p>
         <figure>
             <a href="images/derek_nutmeg_process.png" target="_blank" rel="noopener">
                 <img src="images/derek_nutmeg_process.png" alt="derek_nutmeg_process" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 9:</strong> Hybrid image construction process for Derek and Nutmeg images.</p>
+            <p class="caption"><strong>Figure 11:</strong> Hybrid image construction process for Derek and Nutmeg images.</p>
         </figure>
         <h4>Other examples of hybrid images</h4>
         <figure>
             <a href="images/menalisa_davinci_hybrid.png" target="_blank" rel="noopener">
                 <img src="images/menalisa_davinci_hybrid.png" alt="menalisa_davinci_hybrid" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 10:</strong> Hybrid image construction process for Mona Lisa and Da Vinci images.</p>
+            <p class="caption"><strong>Figure 12:</strong> Hybrid image construction process for Mona Lisa and Da Vinci images.</p>
         </figure>
         <figure>
             <a href="images/zebra_horse_hybrid.png" target="_blank" rel="noopener">
                 <img src="images/zebra_horse_hybrid.png" alt="zebra_horse_hybrid" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 11:</strong> Hybrid image construction process for zebra and horse images.</p>
+            <p class="caption"><strong>Figure 13:</strong> Hybrid image construction process for zebra and horse images.</p>
         </figure>
         <h3>Bells & Whistles</h3>
         <h4>Try using color to enhance the effect</h4>
@@ -299,7 +339,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             <a href="images/hybrid_colors.png" target="_blank" rel="noopener">
                 <img src="images/hybrid_colors.png" alt="hybrid_colors" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 12:</strong> Hybrid image using color to enhance the effect.</p>
+            <p class="caption"><strong>Figure 14:</strong> Hybrid image using color to enhance the effect.</p>
         </figure>
         <p>
             In this example, color is important for low-frequency images. For high-frequency images, the color is almost negligible.
@@ -308,7 +348,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
         <h3>Part 2.3 Gaussian and Laplacian Stacks</h3>
         <p>In this part, we calculate the Gaussian and Laplacian stacks for the images.
             The gaussian stack is constructed by repeatedly applying a Gaussian filter <code>g_i</code> to the image, 
-            resulting in a series of progressively blurred images.The laplacian stack is the difference between consecutive levels of 
+            resulting in a series of progressively blurred images. The Laplacian stack is the difference between consecutive levels of 
             the gaussian stack, except for the last level which is the same as the last level of the gaussian stack. The equations can
             be written as:
             $$
@@ -317,7 +357,14 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             $$
             L_i = G_i - G_{i+1}; \quad L_{N-1} = G_{N-1}
             $$
+            Figure 15 shows the Gaussian and Laplacian stacks for an apple image.
         </p>
+        <figure>
+            <a href="images/gaussian_laplacian_stack.jpg" target="_blank" rel="noopener">
+                <img src="images/gaussian_laplacian_stack.jpg" alt="gaussian_laplacian_stack" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 15:</strong> Gaussian and Laplacian stacks for an apple image.</p>
+        </figure>
         <h3>Part 2.4 Multiresolution Blending</h3>
         <p>First, since we want to blend the images through the middle, we create a mask with the same size as the images.
             The left half of the mask is set to 1 and the right half is set to 0. After that, we have to build three stacks,
@@ -328,25 +375,48 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             $$
             And the final result is obtained by summing the blended Laplacian stack across all levels, which is:
             $$
-            I^B = \sum_{i=1}^{N} L_i^B
+            I^B = \sum_{i=0}^{N-1} L_i^B
             $$
-            Figure 15 illustrates the process of multi-resolution blending for the oraple image.
+            Figure 16 illustrates the process of multi-resolution blending for the oraple image.
         </p>
+        <figure>
+            <a href="images/oraple_process.png" target="_blank" rel="noopener">
             <img src="images/oraple_process.png" alt="oraple_process" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 13:</strong> Blended process for oraple.</p>
+            <p class="caption"><strong>Figure 16:</strong> Blended process for oraple.</p>
         </figure>
         <h4>Other examples</h4>
-        </p>
-            <img src="images/meisje_moon.png" alt="meisje_moon" loading="lazy">
+        <figure>
+            <a href="images/meisje_moon.png" target="_blank" rel="noopener">
+                <img src="images/meisje_moon.png" alt="meisje_moon" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 13:</strong> Blended process for Meisje met de maan and moon.</p>
+            <p class="caption"><strong>Figure 17:</strong> Blended process for Meisje met de maan and moon.</p>
         </figure>
-        </p>
-            <img src="images/eiffel_blend.png" alt="eiffel_blend" loading="lazy">
+        <figure>
+            <a href="images/eiffel_blend.png" target="_blank" rel="noopener">
+                <img src="images/eiffel_blend.png" alt="eiffel_blend" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 13:</strong> Blended process for Eiffel Tower.</p>
+            <p class="caption"><strong>Figure 18:</strong> Blended process for Eiffel Tower.</p>
         </figure>
+        <h3>Bells & Whistles</h3>
+        <h4>Try using color to enhance the effect</h4>
+        <p>
+            All of the blends above are computed in color. The mask and its Gaussian stack are computed and 
+            applied to each color channel separately. For the images' gaussian stack, each color channel 
+            convolved with the corresponding Gaussian filter separately. Figure 18 is an example of the 
+            result of color blending. Day and night scenes of the Eiffel Tower are combined using
+            Laplacian stack blending technique.
+        </p>
+        <p>
+            Moreover, Figure 16 shows that the color comes almost entirely from the last level, 
+            i.e. the lowest-frequency layer. The other levels of the Laplacian stack mainly carry 
+            the edge information of the image, their edges are colored, but not very prominent.
+        </p>
+        <h2>Conclusion</h2>
+        <p>
+            The most important thing I have learned from this project is the importance of filter and frequency in image processing.
+            The nature of image processing is to manipulate and analyze images by understanding and controlling their frequency components.
+        </p>
     </main>
 
     <footer class="site-footer">
