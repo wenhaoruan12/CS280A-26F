@@ -356,6 +356,51 @@ figure a {
     margin: 28px auto 24px;
 }
 
+/* One full-width figure per row (for wide multi-panel strips) */
+.row.stack {
+    grid-template-columns: 1fr;
+}
+
+/* --------------------------------------------------------------------------
+   Sub-headings & code
+   -------------------------------------------------------------------------- */
+
+main h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--heading);
+    margin: 40px 0 14px;
+    line-height: 1.35;
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--accent-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+pre {
+    margin: 16px 0 28px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+pre code,
+pre code.hljs {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+}
+
 /* --------------------------------------------------------------------------
    Home page project cards
    -------------------------------------------------------------------------- */

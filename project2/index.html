@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 2 CS280A</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <link rel="stylesheet" href="../styles.css">
     <link rel="icon" type="image/png" href="../favicon.png?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <header class="site-header">
@@ -35,13 +37,324 @@
             <h1>Fun with Filters and Frequencies</h1>
             <p class="subtitle"><strong>Wenhao Ruan</strong> · Fall 2026</p>
         </section>
-        <p style="text-align:center; color: var(--muted);">This project has not been published yet.</p>
+        <h2>Part 1: Fun with Filters</h2>
+        <p>In this part, we will build intuitions about 2D convolutions and filtering.
+        We will begin by using the humble finite difference as our filter in the x and y directions.
+        $$ D_x = \begin{bmatrix} 1 & 0 & -1 \end{bmatrix}; \quad D_y = \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix};
+        \quad \text{Box} = \frac{1}{81}\underbrace{\begin{bmatrix}
+        1 & \cdots & 1 \\ \vdots & \ddots & \vdots \\ 1 & \cdots & 1
+        \end{bmatrix}}_{9 \times 9}$$
+        </p>
+        <h3>Part 1.1: Convolutions from Scratch</h3>
+        <p>
+            I implemented 2D convolution with <code>numpy</code> only. The kernel is flipped first, and the image is zero-padded by <code>kH // 2</code> and
+            <code>kW // 2</code> on each side so the output has the same size as the input.
+        </p>
+
+        <p><strong>Four loops:</strong> loop over every output pixel, then over every kernel entry.</p>
+    <pre><code class="language-python">def conv2d_4loop(img, kernel, padding_value = 0):
+    '''
+    Four loops to construct the 2D convolution with padding
+    '''
+    kernel = kernel[::-1, ::-1] # Flip
+    kH, kW = kernel.shape
+    H, W = img.shape
+    img_padded = np.pad(img, ((kH // 2, kH // 2), (kW // 2, kW // 2)), mode='constant', constant_values = padding_value)
+    out = np.zeros((H, W))
+    for height in range(H):
+        for width in range(W):
+            for k_height in range(kH):
+                for k_width in range(kW):
+                    out[height, width] += img_padded[height + k_height, width + k_width] * kernel[k_height, k_width]
+    return out</code></pre>
+
+            <p><strong>Two loops:</strong> the two inner loops are replaced by <code>np.sum</code> of the image window and the kernel, followed by a sum.</p>
+    <pre><code class="language-python">def conv2d_2loop(img, kernel, padding_value = 0):
+    '''
+    Two loops to construct the 2D convolution with padding
+    '''
+    kernel = kernel[::-1, ::-1] # Flip
+    kH, kW = kernel.shape
+    H, W = img.shape
+    img_padded = np.pad(img, ((kH // 2, kH // 2), (kW // 2, kW // 2)), mode='constant', constant_values = padding_value)
+    out = np.zeros((H, W))
+    for height in range(H):
+        for width in range(W):
+            out[height,width] = np.sum(img_padded[height:height+kH, width:width+kW]*kernel)
+    return out</code></pre>
+
+            <p><strong>SciPy baseline:</strong></p>
+    <pre><code class="language-python">def conv2d_scipy(img, kernel):
+    return convolve2d(img, kernel, mode='same')</code></pre>
+
+            <p>Each implementation is applied to my grayscale self-portrait with a 9&times;9 box filter, \(D_x\), and \(D_y\), and timed:</p>
+    <pre><code class="language-python">def show_filters(img, conv):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5.4), layout='constrained')
+    
+    for ax, k, name in zip(axes, [box_filter, Dx, Dy], ['box', 'dx', 'dy']):
+        start_time = time.time()
+        ax.imshow(conv(img, k), cmap='gray')
+        ax.set_xlabel(name, fontsize=20)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Time for {name} filter: {elapsed_time:.4f} seconds")
+    
+    
+    plt.savefig(f'./images/{conv.__name__}_filters.png',dpi = 100)
+    plt.show()
+    print(f"Finished showing filters for {conv.__name__}")
+
+for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
+    show_filters(img, conv)</code></pre>
+
+        <p>Figures 1 show the results of applying the different convolution implementations to my self-portrait with various filters.</p>
+        <div class="row stack">
+            <figure>
+                <a href="images/conv2d_4loop_filters.png" target="_blank" rel="noopener">
+                    <img src="images/conv2d_4loop_filters.png" alt="Box, Dx and Dy filtered self-portrait using the four-loop convolution" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1a:</strong> Four-loop convolution 5.9437s / 0.2555s / 0.2941s</p>
+            </figure>
+            <figure>
+                <a href="images/conv2d_2loop_filters.png" target="_blank" rel="noopener">
+                    <img src="images/conv2d_2loop_filters.png" alt="Box, Dx and Dy filtered self-portrait using the two-loop convolution" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1b:</strong> Two-loop convolution 0.4588s / 0.4475s / 0.4387s</p>
+            </figure>
+            <figure>
+                <a href="images/conv2d_scipy_filters.png" target="_blank" rel="noopener">
+                    <img src="images/conv2d_scipy_filters.png" alt="Box, Dx and Dy filtered self-portrait using scipy convolve2d" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 1c:</strong> <code>scipy.signal.convolve2d</code> 0.0217s / 0.0027s / 0.0040s</p>
+            </figure>
+        </div>
+
+        <h4>Runtime comparison</h4>
+        From the timing results above, we can see that the four-loop convolution is the slowest, followed by the two-loop convolution, 
+        and the `scipy.signal.convolve2d` implementation is the fastest. 
+
+        <h3>Part 1.2 Finite Difference Operator</h3>
+        <h4>Show the partial derivatives of the cameraman image</h4>
+        <p>Use <code>scipy.signal.convolve2d</code> to convolve the image with finite difference filters \(D_x\) and \(D_y\)</p>
+        <figure>
+            <a href="images/cameraman_derivatives.png" target="_blank" rel="noopener">
+                <img src="images/cameraman_derivatives.png" alt="cameraman_derivatives" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 2:</strong> Partial derivatives of the cameraman image using the finite difference operator</p>
+        </figure>
+        <h4>Compute and show the gradient magnitude image</h4>
+        <p>The derivative value of this image can be obtained by computing the convolution of the image with the finite difference filters \(D_x\) and \(D_y\)
+            $$G_x = \frac{\partial I}{\partial x} = I * D_x, \quad G_y = \frac{\partial I}{\partial y} = I * D_y$$
+            And the gradient magnitude can be computed as
+            $$G = \sqrt{G_x^2 + G_y^2}$$
+            Figure 3 shows the gradient magnitude image obtained from the partial derivatives. Also we binarize the gradient magnitude image using different 
+            thresholds to highlight the edges and eliminate noise.
+        </p>
+        <figure>
+            <a href="images/cameraman_derivatives_thresholds.png" target="_blank" rel="noopener">
+                <img src="images/cameraman_derivatives_thresholds.png" alt="cameraman_derivatives_thresholds" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 3:</strong> Gradient magnitude of the cameraman image with thresholds</p>
+        </figure>
+        <p>As shown in Figure 3, the gradient magnitude image highlights the edges in the cameraman image, and applying different 
+            thresholds helps in reducing noise. We find that threshold 40 works well for this image.</p>
+        <h3>Part 1.3 Derivative of Gaussian (DoG) Filter</h3>
+        <p>We use a Gaussian filter to blur the original image. First, we use <code>cv2.getGaussianKernel()</code> to create a 1D Gaussian kernel,
+        and then take the outer product of the 1D kernel with itself to create a 2D Gaussian filter \(K_G\). 
+        </p>
+        <h4>Create a blurred version fo the original image by convolving it with a Gaussian filter</h4>
+        <p>In this step, we create a blurred version of the original image by convolving it with a Gaussian filter first, and then 
+            compute the gradient magnitude of the blurred image. The equation can be written as:
+            $$
+            I_K = I * K_G; \quad 
+            DoG_1 = \sqrt{(I_K * D_x)^2 + (I_K * D_y)^2} = \sqrt{((I * K_G) * D_x)^2 + ((I * K_G) * D_y)^2}
+            $$
+        </p>
+        <figure>
+            <a href="images/cameraman_blurred_V1.png" target="_blank" rel="noopener">
+                <img src="images/cameraman_blurred_V1.png" alt="cameraman_blurred_V1" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 4:</strong> Gradient magnitude of the cameraman image after applying Gaussian blur</p>
+        </figure>
+        <p>We find that blurring the image with a Gaussian filter helps in reducing noise and makes the edges more prominent when 
+            computing the gradient magnitude. After applying the Gaussian blur, threshold 40 works well for this image.</p>
+        <h4>Convolve the gaussian kernel with \(D_x\) and \(D_y\) first</h4>
+        <p>In this step, we first convolve the Gaussian kernel with the derivative filters \(D_x\) and \(D_y\) to obtain 
+            the smoothed derivative filters. Then, we convolve the original image with these smoothed derivative filters 
+            to compute the gradient magnitude.
+            $$
+            D_x' = K_G * D_x, \quad D_y' = K_G * D_y;$$
+            $$DoG_2 = \sqrt{(I * D_x')^2 + (I * D_y')^2} = \sqrt{(I * (K_G * D_x))^2 + (I * (K_G * D_y))^2}
+            $$
+        </p>
+        <figure>
+            <a href="images/cameraman_blurred_V2.png" target="_blank" rel="noopener">
+                <img src="images/cameraman_blurred_V2.png" alt="cameraman_blurred_V1" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 5:</strong> Gradient magnitude of the cameraman image after applying Gaussian blur</p>
+        </figure>
+        <p>Figure 4 and 5 show the difference between blurring the image first and blurring the gaussian filter first. We can observe
+            that both approaches produce the same result. This is becuase the convolution operation is <strong>commutative</strong>, meaning that the 
+            order of convolution does not affect the final result.
+            $$
+            (I * K_G) * D_x = I * (D_x * K_G), \quad (I * K_G) * D_y = I * (D_y * K_G)
+            $$
+            $$
+            DoG_1 = \sqrt{((I * K_G) * D_x)^2 + ((I * K_G) * D_y)^2} = \sqrt{(I * (K_G * D_x))^2 + (I * (K_G * D_y))^2} = DoG_2
+            $$
+        </p>
+        <h3>Bells & Whistles</h3>
+        <h4>Compute the image gradient orientations without using built-in functions</h4>
+        
+        <p>Since we can't use built-in functions such as arctan or arccos, we propose using the taylor series expansion to approximate the arctangent function,
+            which can be expressed as:
+            $$
+            \arctan(x) \approx \sum_{n=0}^\infty (-1)^n \frac{x^{2n+1}}{2n+1}    = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \cdots \quad \text{for } |x| \le 1.
+            $$
+            Since the Taylor series approximation is valid for \(|x| \leq 1\), we need to ensure that the ratio of the gradient components falls within this range.
+            Firstly, we take the absolute values of the gradient components, then we apply tangent half-angle formula to ensure that the ratio falls within \([0, 1]\).
+            We assume a, b are the absolute values of the gradient components while c is the length of the hypotenuse. The tangent half-angle formula is given by:
+            $$
+            \tan\left(\frac{\theta}{2}\right) = \frac{\sin\theta}{1 + \cos\theta} = \frac{b/c}{1 + a/c} = \frac{b}{c + a}.
+            $$
+            since \(a + c \ge b\), the ratio \(t = \frac{b}{c + a}\) always falls within the range \([0, 1]\).
+            Therefore, we can use the Taylor series approximation to estimate the gradient orientation \(\theta\) as:
+            $$
+            \theta = 2 \arctan\left(t\right) \approx 2 \left( t - \frac{t^3}{3} + \frac{t^5}{5} - \frac{t^7}{7} + \cdots \right).
+            $$
+            Finally, we change the orientation based on the signs of the original gradient components to ensure the correct quadrant for the angle.
+        </p>
+        <h4>Visualize the gradient orientations with HSV color space</h4>
+        <p>Figure 6 is the visualization of the gradient orientations using the HSV color space.</p>
+        <figure>
+            <a href="images/angle_matrix_hsv.png" target="_blank" rel="noopener">
+                <img src="images/angle_matrix_hsv.png" alt="angle_matrix_hsv" loading="lazy", style="width: 60%; height: auto; display: block; margin: 0 auto;">
+            </a>
+            <p class="caption"><strong>Figure 6:</strong> Visualization of the gradient orientations using the HSV color space.</p>
+        </figure>
+        <h2>Part 2: Fun with Frequencies</h2>
+        <h3>Part 2.1 Image Sharpening</h3>
+        <figure>
+            <a href="images/taj_sharpening.png" target="_blank" rel="noopener">
+                <img src="images/taj_sharpening.png" alt="angle_matrix_hsv" loading="lazy">
+            </a>    
+            <p class="caption"><strong>Figure 7:</strong> Original, blurred, high frequency and sharpened images of the Taj Mahal.</p>
+        </figure>
+        <figure>
+            <a href="images/temple_sharpening.png" target="_blank" rel="noopener">
+                <img src="images/temple_sharpening.png" alt="angle_matrix_hsv" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 8:</strong> Original, blurred, high frequency and sharpened images of a temple.</p>
+        </figure>
+        <h3>Part 2.2 Hybrid Images</h3>
+        <h4>High and Low Frequency Filters</h4>
+        <p>The basic idea is that high frequency tends to dominate perception when it is available, but, at a distance, 
+            only the low frequency (smooth) part of the signal can be seen.
+            The first thing is to build the low-pass filter to extract the low frequency components of the image, the low-pass filter is also known as a 2D Gaussian filter:
+            $$
+            G(\sigma) = \frac{1}{2\pi\sigma^2} \exp\left({-\frac{x^2 + y^2}{2\sigma^2}}\right)
+            $$
+            And the kernel size is typically chosen as:
+            $$
+            \text{kernel size} \approx 6\sigma + 1
+            $$
+            For the high-frequency filter, we can simply subtract the gaussian matrix from impluse matrix which is defined as:
+            $$
+            H(\sigma) = I - G(\sigma); \quad I = \underbrace{\begin{bmatrix}
+            0 & &  \cdots & & 0\\ 0 & \cdots & 1 & \cdots & 0 \\ 0 & &  \cdots & & 0
+            \end{bmatrix}}_{k \times k}; \quad k = 6\sigma + 1
+            $$
+        </p>
+        <h4>Hybrid Image Construction</h4>
+        <p>To construct a hybrid image, we combine the low-frequency component of one image with the high-frequency component of another image. 
+            Mathematically, this can be expressed as:
+            $$
+            \text{Hybrid Image} = \text{Low-Frequency Image} + \text{High-Frequency Image}
+            $$
+        </p>
+        <figure>
+            <a href="images/derek_nutmeg_process.png" target="_blank" rel="noopener">
+                <img src="images/derek_nutmeg_process.png" alt="derek_nutmeg_process" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 9:</strong> Hybrid image construction process for Derek and Nutmeg images.</p>
+        </figure>
+        <h4>Other examples of hybrid images</h4>
+        <figure>
+            <a href="images/menalisa_davinci_hybrid.png" target="_blank" rel="noopener">
+                <img src="images/menalisa_davinci_hybrid.png" alt="menalisa_davinci_hybrid" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 10:</strong> Hybrid image construction process for Mona Lisa and Da Vinci images.</p>
+        </figure>
+        <figure>
+            <a href="images/zebra_horse_hybrid.png" target="_blank" rel="noopener">
+                <img src="images/zebra_horse_hybrid.png" alt="zebra_horse_hybrid" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 11:</strong> Hybrid image construction process for zebra and horse images.</p>
+        </figure>
+        <h3>Bells & Whistles</h3>
+        <h4>Try using color to enhance the effect</h4>
+        <figure>
+            <a href="images/hybrid_colors.png" target="_blank" rel="noopener">
+                <img src="images/hybrid_colors.png" alt="hybrid_colors" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 12:</strong> Hybrid image using color to enhance the effect.</p>
+        </figure>
+        <p>
+            In this example, color is important for low-frequency images. For high-frequency images, the color is almost negligible.
+        </p>
+        <h2>Multi-resolution Blending and The Oraple Journey</h2>
+        <h3>Part 2.3 Gaussian and Laplacian Stacks</h3>
+        <p>In this part, we calculate the Gaussian and Laplacian stacks for the images.
+            The gaussian stack is constructed by repeatedly applying a Gaussian filter <code>g_i</code> to the image, 
+            resulting in a series of progressively blurred images.The laplacian stack is the difference between consecutive levels of 
+            the gaussian stack, except for the last level which is the same as the last level of the gaussian stack. The equations can
+            be written as:
+            $$
+            G_i = I * g_0 * \cdots * g_i, \quad \text{for } i = 0, \dots, N-2
+            $$
+            $$
+            L_i = G_i - G_{i+1}; \quad L_{N-1} = G_{N-1}
+            $$
+        </p>
+        <h3>Part 2.4 Multiresolution Blending</h3>
+        <p>First, since we want to blend the images through the middle, we create a mask with the same size as the images.
+            The left half of the mask is set to 1 and the right half is set to 0. After that, we have to build three stacks,
+            the Laplacian stacks for both images (\(L_i^A\) and \(L_i^O\)) and the Gaussian stack for the mask (\(G_i^M\)).
+            In each layer, we use this formula to blend the images:
+            $$
+            L_i^B = L_i^A \cdot G_i^M + L_i^O \cdot (1 - G_i^M)
+            $$
+            And the final result is obtained by summing the blended Laplacian stack across all levels, which is:
+            $$
+            I^B = \sum_{i=1}^{N} L_i^B
+            $$
+            Figure 15 illustrates the process of multi-resolution blending for the oraple image.
+        </p>
+            <img src="images/oraple_process.png" alt="oraple_process" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 13:</strong> Blended process for oraple.</p>
+        </figure>
+        <h4>Other examples</h4>
+        </p>
+            <img src="images/meisje_moon.png" alt="meisje_moon" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 13:</strong> Blended process for Meisje met de maan and moon.</p>
+        </figure>
+        </p>
+            <img src="images/eiffel_blend.png" alt="eiffel_blend" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 13:</strong> Blended process for Eiffel Tower.</p>
+        </figure>
     </main>
 
     <footer class="site-footer">
         <a href="../index.html">← Back to all projects</a>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
     <script>
     (function () {
         var dd = document.querySelector('.dropdown');
