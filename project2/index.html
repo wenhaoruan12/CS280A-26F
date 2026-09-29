@@ -169,7 +169,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             thresholds helps in reducing noise. We find that threshold 40 works well for this image.</p>
         <h3>Part 1.3 Derivative of Gaussian (DoG) Filter</h3>
         <p>We use a Gaussian filter to blur the original image. First, we use <code>cv2.getGaussianKernel()</code> to create a 1D Gaussian kernel,
-        and then take the outer product of the 1D kernel with itself to create a 2D Gaussian filter \(K_G\). Then, we compute the derivative of 
+        and then take the outer product of the 1D kernel with itself to create a 2D Gaussian filter \(K_G\) (kernel size 5, \(\sigma = 1\)). Then, we compute the derivative of 
         Gaussian (DoG) filters by convolving \(K_G\) with the finite difference filters \(D_x\) and \(D_y\) (As shown in Figure 4). The equation
         can be written as:
         $$
@@ -226,26 +226,52 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
         <h3>Bells & Whistles</h3>
         <h4>Compute the image gradient orientations without using built-in functions</h4>
         
-        <p>Since we can't use built-in functions such as arctan or arccos, we propose using the Taylor series expansion to approximate the arctangent function,
+        <p>The gradient components \(G_x\) and \(G_y\) are computed with the DoG filters from Figure 4 (Gaussian kernel size 5, \(\sigma = 1\)).
+            Since we can't use built-in functions such as arctan or arccos, we propose using the Taylor series expansion to approximate the arctangent function,
             which can be expressed as:
             $$
-            \arctan(x) \approx \sum_{n=0}^\infty (-1)^n \frac{x^{2n+1}}{2n+1}    = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \cdots \quad \text{for } |x| \le 1.
+            \arctan(x) = \sum_{n=0}^\infty (-1)^n \frac{x^{2n+1}}{2n+1} = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \cdots \quad \text{for } |x| \le 1.
             $$
-            Since the Taylor series approximation is valid for \(|x| \leq 1\), we need to ensure that the ratio of the gradient components falls within this range.
-            Firstly, we take the absolute values of the gradient components, then we apply tangent half-angle formula to ensure that the ratio falls within \([0, 1]\).
-            We assume a, b are the absolute values of the gradient components while c is the length of the hypotenuse. The tangent half-angle formula is given by:
+            Since the Taylor series is only valid for \(|x| \leq 1\), we need to ensure that the argument falls within this range.
+            Let \(a = |G_x|\), \(b = |G_y|\) and \(c = \sqrt{a^2 + b^2}\), so that \(\cos\theta_1 = a/c\) and \(\sin\theta_1 = b/c\), where
+            \(\theta_1 \in [0, \pi/2]\) is the orientation folded into the first quadrant. The tangent half-angle formula gives:
             $$
-            \tan\left(\frac{\theta}{2}\right) = \frac{\sin\theta}{1 + \cos\theta} = \frac{b/c}{1 + a/c} = \frac{b}{c + a}.
+            \tan\left(\frac{\theta_1}{2}\right) = \frac{\sin\theta_1}{1 + \cos\theta_1} = \frac{b/c}{1 + a/c} = \frac{b}{c + a}.
             $$
-            since \(a + c \ge b\), the ratio \(t = \frac{b}{c + a}\) always falls within the range \([0, 1]\).
-            Therefore, we can use the Taylor series approximation to estimate the gradient orientation \(\theta\) as:
+            Since \(c \ge b\), the ratio \(t = \frac{b}{c + a}\) always falls within \([0, 1]\), and \(\theta_1 = 2\arctan(t)\).
+            However, the Taylor series converges slowly when \(t\) is close to 1 (i.e. when \(a \to 0\)). To improve the convergence,
+            we always divide the smaller component by the larger one:
             $$
-            \theta = 2 \arctan\left(t\right) \approx 2 \left( t - \frac{t^3}{3} + \frac{t^5}{5} - \frac{t^7}{7} + \cdots \right).
+            t = \frac{\min(a, b)}{c + \max(a, b)}, \quad \varphi = 2\arctan(t) \approx 2 \left( t - \frac{t^3}{3} + \frac{t^5}{5} - \frac{t^7}{7} \right).
             $$
-            Finally, we change the orientation based on the signs of the original gradient components to ensure the correct quadrant for the angle.
+            Here \(\varphi\) is the angle between the gradient and the axis of its larger component, 
+            so \(\varphi \in [0, \pi/4]\). We keep the first 4 terms of the series. 
+            If the vertical component is the larger one,
+            we swap back:
+            $$
+            \theta_1 = \begin{cases} \varphi, & b \le a \\ \pi/2 - \varphi, & b \gt a \end{cases}
+            $$
+            Finally, we map \(\theta_1\) to the correct quadrant based on the signs of the original gradient components, so that \(\theta \in [0, 2\pi)\):
+            $$
+            \theta = \begin{cases}
+            \theta_1, & G_x \ge 0,\ G_y \ge 0 \\
+            \pi - \theta_1, & G_x \lt 0,\ G_y \ge 0 \\
+            \pi + \theta_1, & G_x \lt 0,\ G_y \lt 0 \\
+            2\pi - \theta_1, & G_x \ge 0,\ G_y \lt 0
+            \end{cases}
+            $$
         </p>
         <h4>Visualize the gradient orientations with HSV color space</h4>
-        <p>Figure 7 is the visualization of the gradient orientations using the HSV color space.</p>
+        <p>To visualize the gradient orientations, we use the HSV color space to describe, where each pixel is represented
+            by three values: hue, saturation, and value. The hue represents the gradient orientation,
+            the saturation represents the magnitude and the value represents the brightness of the pixel.
+            We set:
+            $$
+            H = \theta, \quad S = 1, \quad V = \frac{|\nabla I|}{\max |\nabla I|}
+            $$
+            where \(|\nabla I| = \sqrt{G_x^2 + G_y^2}\) is the gradient magnitude of the image.
+            Figure 7 is the visualization of the gradient orientations using the HSV color space.
+        </p>
         <figure>
             <a href="images/angle_matrix_hsv.png" target="_blank" rel="noopener">
                 <img src="images/angle_matrix_hsv.png" alt="angle_matrix_hsv" loading="lazy" style="width: 60%; height: auto; display: block; margin: 0 auto;">
@@ -271,7 +297,7 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             <a href="images/temple_sharpening.jpg" target="_blank" rel="noopener">
                 <img src="images/temple_sharpening.jpg" alt="temple_sharpening" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 9:</strong> Original, blurred, high frequency and sharpened images of a temple (\(\sigma = 5\)).</p>
+            <p class="caption"><strong>Figure 9:</strong> Original, blurred, high frequency and sharpened images of a temple (\(\sigma = 31\)).</p>
         </figure>
         <h4>Pick a sharp image, blur it and sharpen it again</h4>
         <p>Figure 10 shows the results of sharpening, blurring, and re-sharpening the Taj Mahal images (\(\alpha = 1, \sigma = 1\)).
@@ -342,28 +368,45 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             <p class="caption"><strong>Figure 14:</strong> Hybrid image using color to enhance the effect.</p>
         </figure>
         <p>
-            In this example, color is important for low-frequency images. For high-frequency images, the color is almost negligible.
+            Figure 14 compares four setting for the same pair of images, illustrating how color can influence the
+            appearance of the hybrid image. In the high-frequency components, color plays a minimal role, 
+            whereas in the low-frequency components, color significantly affects the perception of the image. 
+        </p>
+        <p>
+            The reason is that color information mostly resides in the low-frequency components of the image,
+            while high-frequency components are largely determined by intensity variations rather than color.
+        </p>
+        <p>
+            In summary, among the four settings, "both color" and "low color only" work much better 
+            than "high color only" and "both gray".
         </p>
         <h2>Multi-resolution Blending and The Oraple Journey</h2>
         <h3>Part 2.3 Gaussian and Laplacian Stacks</h3>
         <p>In this part, we calculate the Gaussian and Laplacian stacks for the images.
-            The gaussian stack is constructed by repeatedly applying a Gaussian filter <code>g_i</code> to the image, 
-            resulting in a series of progressively blurred images. The Laplacian stack is the difference between consecutive levels of 
+            The Gaussian stack is constructed by convolving the original image with Gaussian filters of increasing \(\sigma\)
+            (no downsampling), resulting in a series of progressively blurred images. The Laplacian stack is the difference between consecutive levels of 
             the gaussian stack, except for the last level which is the same as the last level of the gaussian stack. The equations can
             be written as:
             $$
-            G_i = I * g_0 * \cdots * g_i, \quad \text{for } i = 0, \dots, N-2
+            G_0 = I, \quad G_i = I * g_{\sigma_i}, \quad \sigma_i = 2^{i-1}, \quad i = 1, \dots, N-1
             $$
             $$
             L_i = G_i - G_{i+1}; \quad L_{N-1} = G_{N-1}
             $$
-            Figure 15 shows the Gaussian and Laplacian stacks for an apple image.
+            For the oraple we use \(N = 7\) levels, i.e. \(\sigma = 1, 2, 4, 8, 16, 32\), with kernel size \(6\sigma + 1\).
+            Figures 15a and 15b show the Gaussian and Laplacian stacks for the apple and orange images.
         </p>
         <figure>
             <a href="images/gaussian_laplacian_stack.jpg" target="_blank" rel="noopener">
                 <img src="images/gaussian_laplacian_stack.jpg" alt="gaussian_laplacian_stack" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 15:</strong> Gaussian and Laplacian stacks for an apple image.</p>
+            <p class="caption"><strong>Figure 15a:</strong> Gaussian and Laplacian stacks for an apple image.</p>
+        </figure>
+        <figure>
+            <a href="images/gaussian_laplacian_stack_orange.png" target="_blank" rel="noopener">
+                <img src="images/gaussian_laplacian_stack_orange.png" alt="gaussian_laplacian_stack_orange" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 15b:</strong> Gaussian and Laplacian stacks for an orange image.</p>
         </figure>
         <h3>Part 2.4 Multiresolution Blending</h3>
         <p>First, since we want to blend the images through the middle, we create a mask with the same size as the images.
@@ -377,6 +420,8 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             $$
             I^B = \sum_{i=0}^{N-1} L_i^B
             $$
+            The mask's Gaussian stack uses the same \(\sigma\) values as the image stacks. To visualize the Laplacian levels, which contain
+            negative values, we add 0.5 to every level except the last one before clipping to \([0, 1]\).
             Figure 16 illustrates the process of multi-resolution blending for the oraple image.
         </p>
         <figure>
@@ -386,28 +431,39 @@ for conv in [conv2d_4loop, conv2d_2loop, conv2d_scipy]:
             <p class="caption"><strong>Figure 16:</strong> Blended process for oraple.</p>
         </figure>
         <h4>Other examples</h4>
+        Figure 17 uses an irregular (circular) mask to place the moon on the pearl earring, 
+        while Figures 18 use the same vertical step mask as Figure 16.
         <figure>
             <a href="images/meisje_moon.png" target="_blank" rel="noopener">
                 <img src="images/meisje_moon.png" alt="meisje_moon" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 17:</strong> Blended process for Meisje met de maan and moon.</p>
+            <p class="caption"><strong>Figure 17:</strong> Blended process for Meisje met de maan and moon (circular mask, 5 levels, \(\sigma = 1, 2, 4, 8\)).</p>
         </figure>
         <figure>
             <a href="images/eiffel_blend.png" target="_blank" rel="noopener">
                 <img src="images/eiffel_blend.png" alt="eiffel_blend" loading="lazy">
             </a>
-            <p class="caption"><strong>Figure 18:</strong> Blended process for Eiffel Tower.</p>
+            <p class="caption"><strong>Figure 18:</strong> Blended process for Eiffel Tower (vertical mask, 9 levels, \(\sigma = 2, 4, \dots, 256\)).</p>
         </figure>
         <h3>Bells & Whistles</h3>
         <h4>Try using color to enhance the effect</h4>
         <p>
             All of the blends above are computed in color. The mask and its Gaussian stack are computed and 
             applied to each color channel separately. For the images' gaussian stack, each color channel 
-            convolved with the corresponding Gaussian filter separately. Figure 18 is an example of the 
+            convolved with the corresponding Gaussian filter separately. Figure 19 shows an 
+            example of the difference between grayscale and color blending. The seam is less noticeable
+            in the color version compared to the grayscale version.
+        </p>
+        <figure>
+            <a href="images/oraple_gray_vs_color.png" target="_blank" rel="noopener">
+                <img src="images/oraple_gray_vs_color.png" alt="oraple_gray_vs_color" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 19:</strong> Grayscale vs color blending for oraple.</p>
+        </figure>
+        <p>
+            Figure 18 is an example of the 
             result of color blending. Day and night scenes of the Eiffel Tower are combined using
             Laplacian stack blending technique.
-        </p>
-        <p>
             Moreover, Figure 16 shows that the color comes almost entirely from the last level, 
             i.e. the lowest-frequency layer. The other levels of the Laplacian stack mainly carry 
             the edge information of the image, their edges are colored, but not very prominent.
