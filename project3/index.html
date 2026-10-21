@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 3 CS280A</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <link rel="stylesheet" href="../styles.css">
     <link rel="icon" type="image/png" href="../favicon.png?v=3">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <header class="site-header">
@@ -35,7 +37,644 @@
             <h1>Fun with Diffusion Models</h1>
             <p class="subtitle"><strong>Wenhao Ruan</strong> · Fall 2026</p>
         </section>
-        <p style="text-align:center; color: var(--muted);">This project has not been published yet.</p>
+        
+        <h1>Part A: Exploring the Power of Flow Models</h1>
+        <p>Use PixNerd to explore noisy training inputs, velocity predictions, Euler sampling, and 
+            classifier-free guidance. Part A has three sections: Visualizing Training and Sampling,
+            Conditional Generation and Guidance, and Creative Applications. Apply these tools
+            to image editing, visual anagrams, and hybrid images.
+        </p>
+
+        <h2>1: Visualizing Training and Sampling</h2>
+        <h3>1.1: Constructing Noisy Training Inputs</h3>
+        <p>
+            The easiest way to construct a noisy training input is to interpolate Gaussian
+            noise with the original image, which can be written as:
+            $$
+            x_t = (1-t) \epsilon + tx_1, \quad \epsilon \sim \mathcal{N}(0, I)
+            $$
+            where \(x_1\) is the original image and \(x_t\) is the noisy training input at time \(t\).
+            \(\epsilon \sim \mathcal{N}(0, I)\) is the Gaussian noise component. 
+            Figure 1 shows the interpolation between the original image and Gaussian 
+            noise to create noisy training inputs.
+        </p>
+        <figure>
+            <a href="images/interpolation.jpg" target="_blank" rel="noopener">
+                <img src="images/interpolation.jpg" alt="interpolation" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 1:</strong> Interpolation between the original 
+                image and Gaussian noise to create noisy training inputs.</p>
+        </figure>
+
+        <h3>1.2: Classical Denoising</h3>
+        This section uses Gaussian blur as a baseline to denoise images without using Flow model.
+        We can rewrite the equation from 1.1 as:
+        $$
+        \frac{x_t}{t} = \frac{1-t}{t} \epsilon + x_1; \quad 
+        \hat{x}_1^{\text{blur}} = G_\sigma \left(\frac{x_t}{t}\right)
+        $$
+        <p>
+            The results of applying Gaussian blur to denoise the images are shown in Figure 2.
+            As the noise level increases, the effectiveness of Gaussian blur in denoising 
+            the images decreases, which means that we have to use larger values of \(\sigma\)
+            for denoising.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/gaussian_denoise25.png" target="_blank" rel="noopener">
+                    <img src="images/gaussian_denoise25.png" alt="Gaussian denoising at t = 0.25" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2(a):</strong> \(t = 0.25\), Gaussian blur with \(\sigma = 8\).</p>
+            </figure>
+            <figure>
+                <a href="images/gaussian_denoise50.png" target="_blank" rel="noopener">
+                    <img src="images/gaussian_denoise50.png" alt="Gaussian denoising at t = 0.5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2(b):</strong> \(t = 0.5\), Gaussian blur with \(\sigma = 4\).</p>
+            </figure>
+            <figure>
+                <a href="images/gaussian_denoise75.png" target="_blank" rel="noopener">
+                    <img src="images/gaussian_denoise75.png" alt="Gaussian denoising at t = 0.75" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 2(c):</strong> \(t = 0.75\), Gaussian blur with \(\sigma = 2\).</p>
+            </figure>
+        </div>
+
+        <h3>1.3: One-Step Denoising</h3>
+        <p>
+        With a pretrained flow model, we can perform one-step denoising by the following equation:
+        </p>
+        $$
+        \hat{x}_1 = x_t + (1-t) v_{\theta}(x_t, t, c)   
+        $$
+        <p>
+            where \(v_{\theta}(x_t, t, c)\) is the velocity field predicted by the pretrained flow model.
+            \(x_t\) is the noisy image at time step \(t\), and \(c\) represents the conditioning information.
+        </p>
+        <p>
+            The one-step denoising results are shown in Figure 3.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/onestep25.png" target="_blank" rel="noopener">
+                    <img src="images/onestep25.png" alt="One-step denoising at t = 0.25" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 3(a):</strong> One-step denoising at \(t = 0.25\). Left to right: original, noisy input, one-step estimate.</p>
+            </figure>
+            <figure>
+                <a href="images/onestep50.png" target="_blank" rel="noopener">
+                    <img src="images/onestep50.png" alt="One-step denoising at t = 0.5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 3(b):</strong> One-step denoising at \(t = 0.5\). Left to right: original, noisy input, one-step estimate.</p>
+            </figure>
+            <figure>
+                <a href="images/onestep75.png" target="_blank" rel="noopener">
+                    <img src="images/onestep75.png" alt="One-step denoising at t = 0.75" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 3(c):</strong> One-step denoising at \(t = 0.75\). Left to right: original, noisy input, one-step estimate.</p>
+            </figure>
+        </div>
+        <h3>1.4: Visualizing Velocity</h3>
+        <p>
+        In 1.3, we added \((1-t)\hat{v}_{t}\) to the noisy image to estimate the clean image.
+        Since we know the original image, we know exactly what should be added to the 
+        noisy image at each time step. The predicted update by the model is 
+        \((1-t) v_{\theta}(x_t, t, c) = (1-t)\hat{v}_{t}\),
+        and the ground truth update is \(x_1 - x_t = (1-t)v_{gt}\), 
+        where \(x_1\) is the original clean image.
+        </p>
+        <p>For the error heatmap, we use root-mean-square (RMS) error 
+            between the predicted update and the ground truth update at each pixel:
+        $$
+        E_t = \sqrt{\text{mean}_\text{RGB} \left[(1-t) (\hat{v}_{t} - v_{gt}) \right]^2}
+        $$
+        Figure 4 shows the visualization of the velocity field and the corresponding error heatmap.
+        </p>
+        <figure>
+            <a href="images/visualizing_velocity.png" target="_blank" rel="noopener">
+                <img src="images/visualizing_velocity.png" alt="visualizing_velocity" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 4: </strong>Visualization of the velocity field and the corresponding error heatmap</p>
+        </figure>
+
+        <h3>1.5: Iterative Denoising with Euler Sampling</h3>
+        <p>
+            One-step denoising can be inaccurate and we can use Euler integration:
+            $$
+            x_{t + h} = x_t + h v_{\theta}(x_t, t, c)
+            $$
+            where \(h = 0.02\) is the step size.
+            Figure 5 shows the Euler denoising trajectory from \(t=0.5\) to \(t=1\) and Figure
+            6 represents the comparison between one-step denoising and Euler denoising. We can
+            observe that Euler denoising provides a smoother trajectory and results 
+            in better denoising performance compared to one-step denoising.
+        </p>
+        <figure>
+            <a href="images/euler_track.png" target="_blank" rel="noopener">
+                <img src="images/euler_track.png" alt="euler_track" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 5: </strong>Euler denoising trajectory</p>
+        </figure>
+
+        <figure>
+            <a href="images/denoise_methods.png" target="_blank" rel="noopener">
+                <img src="images/denoise_methods.png" alt="denoise_methods" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 6: </strong>One-step denoising and Euler denoising comparison</p>
+        </figure>
+
+        <h3>1.6: Generating Images from Noise</h3>
+        <p>
+            In this section, we use <code>euler_sample</code> function to generate images from scratch.
+            We start by setting <code>t_start = 0</code> and passing pure Gaussian noise as
+            <code>x_start</code>. Figure 7 shows some samples generated from noise using Euler denoising.
+        </p>
+        <figure>
+            <a href="images/euler_samples.png" target="_blank" rel="noopener">
+                <img src="images/euler_samples.png" alt="euler_samples" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 7: </strong>Some samples generated from noise using Euler integration</p>
+        </figure>
+
+        <h2>2: Conditional Generation and Guidance</h2>
+        <p>Conditional generation means generating an image given information such as a text prompt.
+        </p>
+        <h3>2.1: Classifier-Free Guidance (CFG)</h3>
+        <p>
+            To improve the quality of images generated from noise, we can use CFG.
+            CFG evaluates the same image and time with a conditional prompt (\(v_c\)) and an 
+            empty-string prompt (\(v_u\)). Combine them using:
+            $$
+            v_\text{cfg} = v_c + w (v_c - v_u)
+            $$
+            where \(w\) is the guidance weight, and \(w=0\) gives ordinary conditional sampling
+            \((v_\text{cfg}(w=0) = v_c)\). I use \(w = 7\).
+        </p>
+        <p>
+            Figure 8 shows some samples generated from noise using Euler denoising with 
+            classifier-free guidance, their performances are way better than those without guidance.
+        </p>
+        <figure>
+            <a href="images/euler_samples_cfg.png" target="_blank" rel="noopener">
+                <img src="images/euler_samples_cfg.png" alt="euler_samples_cfg" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 8: </strong>Some samples generated from noise using Euler integration with classifier-free guidance</p>
+        </figure>
+
+        <h2>3: Creative Applications</h2>
+        <p>
+            Use flow sampling to edit existing images and generate optical illusions.
+        </p>
+        <h3>3.1: Image-to-Image Editing</h3>
+        <p>
+            Denoising process forces a noisy image back onto the manifold of natural images,
+            which means that we can edit existing images by adding noise and then denoising 
+            them back onto the natural image manifold. Figures 9, 10 and 11 show some examples.
+        </p>
+        <figure>
+            <a href="images/edited_campanile.png" target="_blank" rel="noopener">
+                <img src="images/edited_campanile.png" alt="edited_campanile" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 9: </strong>Edited campanile image</p>
+        </figure>
+        <figure>
+            <a href="images/edited_eiffel.png" target="_blank" rel="noopener">
+                <img src="images/edited_eiffel.png" alt="edited_eiffel" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 10: </strong>Edited eiffel tower image</p>
+        </figure>
+        <figure>
+            <a href="images/edited_meisje.png" target="_blank" rel="noopener">
+                <img src="images/edited_meisje.png" alt="edited_meisje" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 11: </strong>Edited meisje image</p>
+        </figure>
+
+        <h4>Editing Hand-Drawn and Web Images</h4>
+        <p>Figure 12 shows an example from web, which is Picasso's drawing. Figures 13 and 14
+            show examples of editing self drawings.
+        </p>
+        <figure>
+            <a href="images/edited_picasso.png" target="_blank" rel="noopener">
+                <img src="images/edited_picasso.png" alt="edited_picasso" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 12: </strong>Edited Picasso's drawing</p>
+        </figure>
+        <figure>
+            <a href="images/edited_self1.png" target="_blank" rel="noopener">
+                <img src="images/edited_self1.png" alt="edited_self1" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 13: </strong>Edited self drawing</p>
+        </figure>
+        <figure>
+            <a href="images/edited_self2.png" target="_blank" rel="noopener">
+                <img src="images/edited_self2.png" alt="edited_self2" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 14: </strong>Edited self drawing</p>
+        </figure>
+
+        <h3>3.2: Text-Guided Image Editing</h3>
+        <figure>
+            <a href="images/edited_pencil.png" target="_blank" rel="noopener">
+                <img src="images/edited_pencil.png" alt="edited_pencil" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 15: </strong>Campanile to pencil</p>
+        </figure>
+        <figure>
+            <a href="images/edited_baguette.png" target="_blank" rel="noopener">
+                <img src="images/edited_baguette.png" alt="edited_baguette" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 16: </strong>Eiffel Tower to baguette</p>
+        </figure>
+        <figure>
+            <a href="images/edited_glasses.png" target="_blank" rel="noopener">
+                <img src="images/edited_glasses.png" alt="edited_glasses" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 17: </strong>Meisje drawing to woman with glasses</p>
+        </figure>
+        
+        <h3>3.3: Visual Anagrams</h3>
+        <p>
+            To create optical illusions with flow models, we will denoise an image \(x_t\)
+            at step \(t\) with prompt \(p_1\) and obtain velocity estimate \(v_1\). But at
+            the same time, we will flip \(x_t\) upside down (rotate it by 180 degrees) and denoise with the prompt \(p_2\) 
+            to obtain velocity estimate \(v_2\). Then, we can rotate \(v_2\) back and average the 
+            two velocity estimates. Finally, we can perform a Euler step with the averaged velocity.
+            The equations are:
+            $$
+            v_1 = v_{\text{cfg}} (x_t,t,p_1)$$
+            $$v_2 = \text{flip}\left( v_{\text{cfg}} (\text{flip}(x_t),t,p_2) \right)$$
+            $$v_{\text{avg}} = \frac{v_1 + v_2}{2}$$
+        </p>
+        <p>
+            Figures 18 and 19 show two visual anagrams. The left view is the generated image, and
+            the right view is the same image rotated by 180 degrees.
+        </p>
+        <figure>
+            <a href="images/anagram_180_e1.png" target="_blank" rel="noopener">
+                <img src="images/anagram_180_e1.png" alt="180-degree visual anagram, old man and campfire" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 18: </strong>Upright: "an oil painting of an old man". Rotated: "an oil painting of people around a campfire".</p>
+        </figure>
+        <figure>
+            <a href="images/anagram_180_e2.png" target="_blank" rel="noopener">
+                <img src="images/anagram_180_e2.png" alt="180-degree visual anagram, mountain village and horse" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 19: </strong>Upright: "a lithograph of a snowy mountain village". Rotated: "a lithograph of a horse".</p>
+        </figure>
+
+        <h3>3.4: Hybrid Images</h3>
+        <p>
+            Hybrid images combine the low frequencies of one prompt with the high frequencies of another.
+            At each Euler step, the velocity is:
+            $$
+            v = \text{lowpass}(v_a) + v_b - \text{lowpass}(v_b)
+            $$
+            where \(v_a\) and \(v_b\) are the CFG velocities.
+        </p>
+        <div class="row">
+            <figure>
+                <a href="images/hybrid_1_waterfall.png" target="_blank" rel="noopener">
+                    <img src="images/hybrid_1_waterfall.png" alt="hybrid of a lithograph of a skull and a lithograph of a waterfall" loading="lazy">
+                </a>
+                <img src="images/hybrid_1_waterfall.png" alt="reduced-size view" loading="lazy" style="width: 64px; display: block; margin: 10px auto 0;">
+                <p class="caption"><strong>Figure 20: </strong>Close: "a lithograph of a waterfall". Distant: "a lithograph of a skull".</p>
+            </figure>
+            <figure>
+                <a href="images/hybrid_2_forest.png" target="_blank" rel="noopener">
+                    <img src="images/hybrid_2_forest.png" alt="hybrid of a lithograph of a cat and a lithograph of a forest" loading="lazy">
+                </a>
+                <img src="images/hybrid_2_forest.png" alt="reduced-size view" loading="lazy" style="width: 64px; display: block; margin: 10px auto 0;">
+                <p class="caption"><strong>Figure 21: </strong>Close: "a lithograph of a forest". Distant: "a lithograph of a cat".</p>
+            </figure>
+        </div>
+
+        <h2>Bells &amp; Whistles</h2>
+        <h3>More Visual Anagrams</h3>
+        <p>
+            I tried two more transforms from the
+            <a href="https://arxiv.org/abs/2311.17919" target="_blank" rel="noopener">Visual Anagrams paper</a>:
+            a 90-degree rotation and a color inversion \(F(x) = -x\).
+        </p>
+        <figure>
+            <a href="images/anagram_90_e1.png" target="_blank" rel="noopener">
+                <img src="images/anagram_90_e1.png" alt="90-degree visual anagram, old man and campfire" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 22: </strong>Rotate 90 degrees. Original: "an oil painting of an old man". Rotated: "an oil painting of people around a campfire".</p>
+        </figure>
+        <figure>
+            <a href="images/anagram_90_e2.png" target="_blank" rel="noopener">
+                <img src="images/anagram_90_e2.png" alt="90-degree visual anagram, mountain village and horse" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 23: </strong>Rotate 90 degrees. Original: "a lithograph of a snowy mountain village". Rotated: "a lithograph of a horse".</p>
+        </figure>
+        <figure>
+            <a href="images/anagram_color_e1.png" target="_blank" rel="noopener">
+                <img src="images/anagram_color_e1.png" alt="color inversion anagram, old man and campfire" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 24: </strong>Color inversion. Original: "an oil painting of an old man". Inverted: "an oil painting of people around a campfire".</p>
+        </figure>
+        <figure>
+            <a href="images/anagram_color_e2.png" target="_blank" rel="noopener">
+                <img src="images/anagram_color_e2.png" alt="color inversion anagram, mountain village and horse" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 25: </strong>Color inversion. Original: "a lithograph of a snowy mountain village". Inverted: "a lithograph of a horse".</p>
+        </figure>
+
+        <h3>Course Logo</h3>
+        <p>
+            I designed a course logo by editing the Cal logo with the prompt
+            "a logo of the Golden Gate Bridge, blue and gold colors, simple".
+            Small \(t\) gives the model more freedom to draw the bridge, while larger \(t\) keeps
+            the original logo. I like \(t = 0.06\) the most, which keeps the Cal lettering
+            with the bridge.
+        </p>
+        <figure>
+            <a href="images/logo_bridge.png" target="_blank" rel="noopener">
+                <img src="images/logo_bridge.png" alt="course logo edits of the Cal logo" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 26: </strong>Text-guided editing of the Cal logo at different starting times \(t\).</p>
+        </figure>
+
+        <br><br>
+        <h1>Part B: Flow Matching from Scratch</h1>
+
+        <h2>1: Training a Single-Step Denoising UNet</h2>
+        <h3>1.1: Implementing the UNet</h3>
+        <p>
+            See <code>partb.ipynb</code> for the implementation details of the UNet.
+        </p>
+
+        <h3>1.2: Using the UNet to Train a Denoiser</h3>
+        <p>
+
+        </p>
+        <p>
+            We add Gaussian noise to a clean digit with \(z = x + \sigma \epsilon\),
+            \(\epsilon \sim \mathcal{N}(0, I)\), and train the UNet to recover \(x\) with an L2 loss.
+            Figure 27 shows the noising process for different \(\sigma\).
+        </p>
+        <figure>
+            <a href="images/partB_1_2_0.png" target="_blank" rel="noopener">
+                <img src="images/partB_1_2_0.png" alt="noising process at different sigma" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 27: </strong>Noisy images with \(\sigma = 0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0\).</p>
+        </figure>
+
+        <h4>1.2.1: Training</h4>
+        <p>
+            I train the denoiser with \(\sigma = 0.5\), hidden dimension \(D = 128\), batch size 256,
+            Adam with learning rate \(10^{-4}\), for 5 epochs. 
+            Figure 28 shows the training loss, and Figure 29 shows the test results after epoch 1 and epoch 5.
+            After epoch 1 the outputs still have some blur and leftover noise, and after epoch 5 they are clean and sharp.
+        </p>
+        <figure>
+            <a href="images/partB_1_2_1_loss.png" target="_blank" rel="noopener">
+                <img src="images/partB_1_2_1_loss.png" alt="denoiser training loss" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 28: </strong>Training loss of the one-step denoiser.</p>
+        </figure>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_1_2_1_epoch1.png" target="_blank" rel="noopener">
+                    <img src="images/partB_1_2_1_epoch1.png" alt="denoiser results on test set, epoch 1" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 29(a): </strong>Test results after epoch 1. Top: clean digits. Middle: noisy inputs with \(\sigma = 0.5\). Bottom: denoised outputs.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_1_2_1_epoch5.png" target="_blank" rel="noopener">
+                    <img src="images/partB_1_2_1_epoch5.png" alt="denoiser results on test set, epoch 5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 29(b): </strong>Test results after epoch 5. Top: clean digits. Middle: noisy inputs with \(\sigma = 0.5\). Bottom: denoised outputs.</p>
+            </figure>
+        </div>
+
+        <h4>1.2.2: Out-of-Distribution Testing</h4>
+        <p>
+            The denoiser is trained only on \(\sigma = 0.5\). It still works well for smaller noise,
+            but it fails when \(\sigma \geq 0.8\), as shown in Figure 30.
+        </p>
+        <figure>
+            <a href="images/partB_1_2_2.png" target="_blank" rel="noopener">
+                <img src="images/partB_1_2_2.png" alt="out-of-distribution denoising" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 30: </strong>Top: noisy inputs with 
+                \(\sigma = 0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0\). Bottom: denoised outputs.</p>
+        </figure>
+
+        <h4>1.2.3: Denoising Pure Noise</h4>
+        <p>
+            Figure 31 shows the training loss when denoising pure noise. Figures 32(a) and 32(b)
+             show the outputs for pure noise inputs after epoch 1 and epoch 5, respectively. The loss
+             figure shows that the loss decreases quickly at first but then plateaus.
+             The outputs in Figure 32 all look like the same blurry digit, and they don't improve much
+             from epoch 1 to epoch 5. This is because the input is pure noise and carries no information
+             about the target, so the model cannot know which digit to reconstruct. Under the MSE loss,
+             the best it can do is to output the average of all training digits, which is exactly
+             the blurry "mean digit" we see.
+        </p>
+        <figure>
+            <a href="images/partB_1_2_3_loss.png" target="_blank" rel="noopener">
+                <img src="images/partB_1_2_3_loss.png" alt="pure noise training loss" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 31: </strong>Training loss when denoising pure noise.</p>
+        </figure>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_1_2_3_epoch1.png" target="_blank" rel="noopener">
+                    <img src="images/partB_1_2_3_epoch1.png" alt="pure noise denoising, epoch 1" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 32(a): </strong>Outputs for pure noise inputs after epoch 1.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_1_2_3_epoch5.png" target="_blank" rel="noopener">
+                    <img src="images/partB_1_2_3_epoch5.png" alt="pure noise denoising, epoch 5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 32(b): </strong>Outputs for pure noise inputs after epoch 5.</p>
+            </figure>
+        </div>
+
+        <h2>2: Flow Matching</h2>
+        <h3>2.1: Implementing a Time-Conditioned UNet</h3>
+        <p>
+            For flow matching, we interpolate between noise \(x_0 \sim \mathcal{N}(0, I)\) and a clean
+            image \(x_1\), and the UNet predicts the velocity:
+            $$
+            x_t = (1-t)x_0 + t x_1, \quad
+            \mathcal{L} = \left\| (x_1 - x_0) - u_\theta(x_t, t) \right\|^2
+            $$
+            The time \(t\) is fed into the UNet through two FCBlocks.
+        </p>
+
+        <h3>2.2: Training the Time-Conditioned UNet</h3>
+        <p>
+            I train with \(D = 64\), batch size 64, Adam with initial learning rate \(10^{-2}\),
+            and an exponential scheduler with \(\gamma = 0.1^{1/10}\), for 10 epochs.
+        </p>
+        <figure>
+            <a href="images/partB_2_2_loss.png" target="_blank" rel="noopener">
+                <img src="images/partB_2_2_loss.png" alt="time-conditioned training loss" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 33: </strong>Training loss of the time-conditioned UNet.</p>
+        </figure>
+
+        <h3>2.3: Sampling from the Time-Conditioned UNet</h3>
+        <p>
+            Starting from pure noise, I run 50 Euler steps \(x \leftarrow x + \frac{1}{T} u_\theta(x, t)\).
+            The samples get cleaner with more training, but some of them still do not look like real digits.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_2_3_epoch1.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_3_epoch1.png" alt="time-conditioned samples, epoch 1" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 34(a): </strong>Samples after epoch 1.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_3_epoch5.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_3_epoch5.png" alt="time-conditioned samples, epoch 5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 34(b): </strong>Samples after epoch 5.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_3_epoch10.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_3_epoch10.png" alt="time-conditioned samples, epoch 10" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 34(c): </strong>Samples after epoch 10.</p>
+            </figure>
+        </div>
+
+        <h3>2.4: Implementing a Class-Conditioned UNet</h3>
+        <p>
+            To control which digit is generated, the class label \(c\) is passed in as a one-hot vector
+            through two more FCBlocks. The class embedding scales the features and the time embedding
+            shifts them:
+            $$
+            \text{unflatten} = c_1 \cdot \text{unflatten} + t_1, \quad
+            \text{up}_1 = c_2 \cdot \text{up}_1 + t_2
+            $$ During training, the class is dropped with probability 0.1,
+            so the same model also learns the unconditional velocity. At sampling time, I use
+            classifier-free guidance with \(\gamma = 5\):
+            $$
+            u = u_{\text{uncond}} + \gamma \left( u_{\text{cond}} - u_{\text{uncond}} \right)
+            $$
+        </p>
+
+        <h3>2.5: Training the Class-Conditioned UNet</h3>
+        <p>
+            To see if the scheduler is necessary, I also train the same model without it, using a
+            constant learning rate of \(10^{-3}\). The initial learning rate \(10^{-2}\) is too large
+            to keep for 10 epochs, so I use a smaller one. As shown in Figure 35, both runs reach a
+            similar final loss. The constant learning rate starts with a smaller loss spike, but its
+            loss stays a bit noisier, because the step size never decays.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_2_5_loss.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_5_loss.png" alt="class-conditioned training loss with scheduler" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 35(a): </strong>Training loss with the exponential scheduler, initial learning rate \(10^{-2}\).</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_5_loss_constLR.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_5_loss_constLR.png" alt="class-conditioned training loss with constant learning rate" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 35(b): </strong>Training loss without a scheduler, constant learning rate \(10^{-3}\).</p>
+            </figure>
+        </div>
+
+        <h3>2.6: Sampling from the Class-Conditioned UNet</h3>
+        <p>
+            Each grid shows four samples of every digit, generated with 300 Euler steps and \(\gamma = 5\).
+            After one epoch, most digits are recognizable, but the strokes are still thick and broken.
+            After 10 epochs they are clean and varied.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_2_6_epoch1.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_epoch1.png" alt="class-conditioned samples, epoch 1" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 36(a): </strong>Class-conditioned samples after epoch 1.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_6_epoch5.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_epoch5.png" alt="class-conditioned samples, epoch 5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 36(b): </strong>Class-conditioned samples after epoch 5.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_6_epoch10.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_epoch10.png" alt="class-conditioned samples, epoch 10" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 36(c): </strong>Class-conditioned samples after epoch 10.</p>
+            </figure>
+        </div>
+
+        <h4>Without the Learning Rate Scheduler</h4>
+        <p>
+            Figure 37 shows the samples generated by the model without a learning rate scheduler 
+            after epochs 1, 5, and 10. For epoch 1, the samples are already quite clean compared to the 
+            scheduled model in Figure 36(a). For epoch 5 and 10, the samples continue to improve and 
+            become cleaner, but I don't notice a significant difference compared to the scheduled model.
+        </p>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_2_6_CLR_epoch1.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_CLR_epoch1.png" alt="class-conditioned samples without scheduler, epoch 1" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 37(a): </strong>Samples without a scheduler (constant learning rate \(10^{-3}\)) after epoch 1.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_6_CLR_epoch5.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_CLR_epoch5.png" alt="class-conditioned samples without scheduler, epoch 5" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 37(b): </strong>Samples without a scheduler (constant learning rate \(10^{-3}\)) after epoch 5.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_2_6_CLR_epoch10.png" target="_blank" rel="noopener">
+                    <img src="images/partB_2_6_CLR_epoch10.png" alt="class-conditioned samples without scheduler, epoch 10" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 37(c): </strong>Samples without a scheduler (constant learning rate \(10^{-3}\)) after epoch 10.</p>
+            </figure>
+        </div>
+
+        <h3>Bells and Whistles for Part 2.2/2.3</h3>
+        <h4>A better time-conditioned only UNet</h4>
+        <p>Our time-conditioning only UNet in part 2.3 is actually far from perfect.
+            Many samples in Figure 34(c) do not look like real digits. To improve it, I made three changes:
+        </p>
+        <ul>
+            <li>Increase the hidden dimension from \(D = 64\) to \(D = 128\), so the model has more capacity.</li>
+            <li>Train for 20 epochs instead of 10. The exponential scheduler is rescaled to
+                \(\gamma = 0.1^{1/20}\), so the learning rate still decays from \(10^{-2}\) to \(10^{-3}\).</li>
+            <li>Sample with 300 Euler steps instead of 50, which makes each step smaller and more accurate.</li>
+        </ul>
+        <p>
+            Figure 38 shows the training loss, which keeps decreasing slowly through all 20 epochs.
+            Figures 39(a) and 39(b) show the new samples, which are clearly better and most of them are now
+            recognizable digits, such as 2, 0, 5, 8 and 9. A few samples are still ambiguous.
+        </p>
+        <figure>
+            <a href="images/partB_BW_loss.png" target="_blank" rel="noopener">
+                <img src="images/partB_BW_loss.png" alt="improved time-conditioned training loss" loading="lazy">
+            </a>
+            <p class="caption"><strong>Figure 38: </strong>Training loss of the improved time-conditioned UNet. The first 200 steps are skipped for a clearer scale.</p>
+        </figure>
+        <div class="row stack">
+            <figure>
+                <a href="images/partB_BW_epoch10.png" target="_blank" rel="noopener">
+                    <img src="images/partB_BW_epoch10.png" alt="improved time-conditioned samples, epoch 10" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 39(a): </strong>Samples from the improved model after epoch 10.</p>
+            </figure>
+            <figure>
+                <a href="images/partB_BW_epoch20.png" target="_blank" rel="noopener">
+                    <img src="images/partB_BW_epoch20.png" alt="improved time-conditioned samples, epoch 20" loading="lazy">
+                </a>
+                <p class="caption"><strong>Figure 39(b): </strong>Samples from the improved model after epoch 20.</p>
+            </figure>
+        </div>
+
     </main>
 
     <footer class="site-footer">
